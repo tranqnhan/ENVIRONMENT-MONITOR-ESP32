@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
+#include "i2c_setup.h"
 #include "scd41.h"
 
 
@@ -34,14 +35,7 @@ void write_measurements(const measurement_t *m) {
 }
 
 
-// ---------------------------------------------------------
-// Main
-// ---------------------------------------------------------
-void app_main(void)
-{
-    // Give USB Serial/JTAG time to connect
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
+void scd41_task() {
     esp_err_t err;
 
     err = scd41_init();
@@ -66,4 +60,22 @@ void app_main(void)
 
         vTaskDelay(pdMS_TO_TICKS(5000));
     }
+}
+
+
+
+#include "esp_lcd_panel_ops.h"
+#include "esp_lcd_panel_ssd1306.h"
+
+
+// ---------------------------------------------------------
+// Main
+// ---------------------------------------------------------
+void app_main(void)
+{
+    // Give USB Serial/JTAG time to connect
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    esp_err_t err = i2c_init();
+    handle_cmd(err, "i2c init");
 }

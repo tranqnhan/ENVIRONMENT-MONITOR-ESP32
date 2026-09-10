@@ -1,0 +1,8 @@
+#define I2C_SDA     GPIO_NUM_4
+#define I2C_SCL     GPIO_NUM_5
+#define I2C_PORT    I2C_NUM_0
+
+
+extern i2c_master_bus_handle_t i2c_bus_handle;
+
+esp_err_t i2c_init();
