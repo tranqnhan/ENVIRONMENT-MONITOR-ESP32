@@ -1,3 +1,5 @@
+#pragma once
+
 #define I2C_SDA     GPIO_NUM_4
 #define I2C_SCL     GPIO_NUM_5
 #define I2C_PORT    I2C_NUM_0

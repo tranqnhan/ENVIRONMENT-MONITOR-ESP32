@@ -8,10 +8,9 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-#include "ssd1306.h"
-
 #include "i2c_setup.h"
 #include "scd41.h"
+#include "display.h"
 
 
 const char *SCD41_TAG = "SCD41";
@@ -65,24 +64,6 @@ void write_measurements(const measurement_t *m) {
 // }
 
 
-ssd1306_handle_t oled_dev_hdl;
-
-void display_measurements(const measurement_t *scd41_m) {
-    ssd1306_clear_display(oled_dev_hdl, false);
-    ssd1306_set_contrast(oled_dev_hdl, 0xff);
-    
-    char co2_s[11];
-    char tmp_s[17];
-    char hmd_s[17];
-
-    sprintf(co2_s, "CO2 %d", scd41_m->co2);
-    sprintf(tmp_s, "TMP %.2f", scd41_m->temperature);
-    sprintf(hmd_s, "HMD %.2f", scd41_m->humidity);
-    
-    ssd1306_display_text(oled_dev_hdl, 0, co2_s, false);
-    ssd1306_display_text(oled_dev_hdl, 1, tmp_s, false);
-    ssd1306_display_text(oled_dev_hdl, 2, hmd_s, false);
-}
 
 
 // ---------------------------------------------------------
@@ -96,13 +77,8 @@ void app_main(void)
     esp_err_t err = i2c_init();
     handle_cmd(err, "i2c init");
 
-    ssd1306_config_t dev_cfg = I2C_SSD1306_128x32_CONFIG_DEFAULT;
-    ssd1306_init(i2c_bus_handle, &dev_cfg, &oled_dev_hdl);
-    
-    if (oled_dev_hdl == NULL) {
-        ESP_LOGE("LCD", "ssd1306 handle init failed");
-        assert(oled_dev_hdl);
-    }
+    err = display_init();
+    handle_cmd(err, "display init");
 
     err = scd41_init();
     handle_cmd(err, "scd41 init");
@@ -121,8 +97,8 @@ void app_main(void)
         if (is_data_ready) {
             err = scd41_read_measurement(&scd41_m);
             handle_cmd(err, "scd41 read");
-            write_measurements(&scd41_m);
-            display_measurements(&scd41_m);
+            //write_measurements(&scd41_m);
+            display_measurements_task(&scd41_m);
         }
 
         vTaskDelay(pdMS_TO_TICKS(5000));

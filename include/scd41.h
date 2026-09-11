@@ -1,3 +1,5 @@
+#pragma once
+
 #define SCD41_ADDR    0x62
 
 typedef struct {
