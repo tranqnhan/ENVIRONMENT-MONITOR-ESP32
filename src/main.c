@@ -12,24 +12,7 @@
 #include "scd41.h"
 #include "display.h"
 
-#define DEBUG 1
-
-const char *SCD41_TAG = "SCD41";
-
-
-void handle_cmd(esp_err_t err, const char *cmd) {
-    if (!DEBUG) return;
-
-    if (err != ESP_OK) {
-        ESP_LOGE(SCD41_TAG, "%s command failed: %s.",
-            cmd,
-            esp_err_to_name(err));
-    } else {
-        ESP_LOGI(SCD41_TAG, "%s command success.",
-            cmd
-        );
-    }
-}
+#include "handle_cmd.h"
 
 
 void setup() {
@@ -47,7 +30,7 @@ void setup() {
 }
 
 
-void physical_task(void *pvParameter) {
+void environment_monitor_task(void *pvParameter) {
     uint32_t is_data_ready;
     measurement_t scd41_m;
     esp_err_t err;
@@ -79,7 +62,7 @@ void app_main(void)
 
     setup();
 
-    xTaskCreate(&physical_task, "Physical Task", 1500, NULL, 5, NULL);
+    xTaskCreate(&environment_monitor_task, "Environment Monitor", 1500, NULL, 5, NULL);
 
 
 
