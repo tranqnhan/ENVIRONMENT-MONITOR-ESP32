@@ -3,8 +3,8 @@
 #include "driver/i2c_master.h"
 #include "esp_err.h"
 
-#include "i2c_setup.h"
-#include "scd41.h"
+#include "p_i2c.h"
+#include "p_scd41.h"
 
 i2c_master_dev_handle_t scd41_handle;
 

@@ -1,9 +1,10 @@
 #include "esp_err.h"
 
-#include "i2c_setup.h"
 #include "ssd1306.h"
-#include "display.h"
-#include "scd41.h"
+
+#include "p_i2c.h"
+#include "p_display.h"
+#include "p_scd41.h"
 
 
 ssd1306_handle_t oled_dev_hdl;

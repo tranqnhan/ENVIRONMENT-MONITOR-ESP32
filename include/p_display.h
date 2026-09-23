@@ -1,8 +1,9 @@
 #pragma once
 
 #include "esp_err.h"
-#include "scd41.h"
 #include "ssd1306.h"
+
+#include "p_scd41.h"
 
 extern ssd1306_handle_t oled_dev_hdl;
 

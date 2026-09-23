@@ -1,3 +1,3 @@
 #pragma once
 
-void wifi_init_softap();
+void wifi_softap_init();

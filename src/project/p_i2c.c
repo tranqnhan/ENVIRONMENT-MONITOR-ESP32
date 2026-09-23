@@ -1,6 +1,7 @@
 #include "driver/i2c_master.h"
 #include "esp_err.h"
-#include "i2c_setup.h"
+
+#include "p_i2c.h"
 
 i2c_master_bus_handle_t i2c_bus_handle;
 

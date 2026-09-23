@@ -1,10 +1,11 @@
-#include "handle_cmd.h"
 #include "esp_err.h"
 #include "esp_log.h"
 
-const char *DEVICE_NAME = "ESP32 DEVICE";
+#include "p_log.h"
 
-int handle_cmd(esp_err_t err, const char *cmd) {
+const char *DEVICE_NAME = "ENV MONITOR";
+
+int log_command(esp_err_t err, const char *cmd) {
     if (!DEBUG) return err;
 
     if (err != ESP_OK) {
@@ -24,7 +25,7 @@ int handle_cmd(esp_err_t err, const char *cmd) {
     }
 }
 
-int handle_cmd_int(int err, const char *cmd) {
+int log_command_int(int err, const char *cmd) {
     if (!DEBUG) return err;
 
     if (err != 0) {

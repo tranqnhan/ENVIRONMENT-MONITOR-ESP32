@@ -7,7 +7,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
-#include "handle_cmd.h"
+#include "p_log.h"
 #include "p_wifi.h"
 
 
@@ -20,7 +20,7 @@ static void wifi_event_handler(void *args, esp_event_base_t event_base, int32_t 
     ESP_LOGI(DEVICE_NAME, "Event nr: %ld!\n", event_id);
 }
 
-void wifi_init_softap() 
+void wifi_softap_init() 
 {
     esp_err_t err = nvs_flash_init();
 

@@ -5,29 +5,27 @@
 
 #include "esp_err.h"
 
-#include "i2c_setup.h"
-#include "scd41.h"
-#include "display.h"
-
-#include "handle_cmd.h"
-
+#include "p_i2c.h"
+#include "p_scd41.h"
+#include "p_display.h"
+#include "p_log.h"
 #include "p_wifi.h"
 
 
 static void setup() {
     esp_err_t err = i2c_init();
-    handle_cmd(err, "i2c init");
+    log_command(err, "i2c init");
 
     err = display_init();
-    handle_cmd(err, "display init");
+    log_command(err, "display init");
 
     err = scd41_init();
-    handle_cmd(err, "scd41 init");
+    log_command(err, "scd41 init");
 
     err = scd41_start_periodic_measurement();
-    handle_cmd(err, "scd41 start periodic measurement");
+    log_command(err, "scd41 start periodic measurement");
 
-    wifi_init_softap();
+    wifi_softap_init();
 }
 
 
