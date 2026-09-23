@@ -5,4 +5,5 @@
 .vscode/ipch
 .vscode/settings.json
 archive/
+managed_components/
 .clangd
