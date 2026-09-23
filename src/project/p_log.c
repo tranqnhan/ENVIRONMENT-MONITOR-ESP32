@@ -6,8 +6,6 @@
 const char *DEVICE_NAME = "ENV MONITOR";
 
 int log_command(esp_err_t err, const char *cmd) {
-    if (!DEBUG) return err;
-
     if (err != ESP_OK) {
         if (DEBUG) {
             ESP_LOGE(DEVICE_NAME, "%s command failed: %s.",
@@ -26,8 +24,6 @@ int log_command(esp_err_t err, const char *cmd) {
 }
 
 int log_command_int(int err, const char *cmd) {
-    if (!DEBUG) return err;
-
     if (err != 0) {
         if (DEBUG) {
             ESP_LOGE(DEVICE_NAME, "%s command failed: %d.",
