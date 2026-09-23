@@ -1,19 +1,22 @@
-#include "ssd1306.h"
+#include "esp_err.h"
+
 #include "i2c_setup.h"
+#include "ssd1306.h"
 #include "display.h"
 #include "scd41.h"
+
 
 ssd1306_handle_t oled_dev_hdl;
 
 esp_err_t display_init(void) {
     ssd1306_config_t dev_cfg = I2C_SSD1306_128x32_CONFIG_DEFAULT;
-    esp_err_t err = ssd1306_init(i2c_bus_handle, &dev_cfg, &oled_dev_hdl);
+    esp_err_t err = ssd1306_init(*get_i2c_bus_handle(), &dev_cfg, &oled_dev_hdl);
     
     return err;
 }
 
 
-void display_measurements_task(const measurement_t *scd41_m) {
+void display_measurements(const measurement_t *scd41_m) {
     ssd1306_clear_display(oled_dev_hdl, false);
     ssd1306_set_contrast(oled_dev_hdl, 0xff);
     

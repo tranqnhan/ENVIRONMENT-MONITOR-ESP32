@@ -4,7 +4,8 @@
 
 #define DEBUG 1
 
-extern const char *TAG;
+extern const char *DEVICE_NAME;
 
-void handle_cmd(esp_err_t err, const char *cmd);
+int handle_cmd(esp_err_t err, const char *cmd);
+int handle_cmd_int(int err, const char *cmd);
 

@@ -1,7 +1,5 @@
 #include "driver/i2c_master.h"
-
 #include "esp_err.h"
-
 #include "i2c_setup.h"
 
 i2c_master_bus_handle_t i2c_bus_handle;
@@ -24,4 +22,8 @@ esp_err_t i2c_init() {
     );
 
     return init_bus_err;
+}
+
+i2c_master_bus_handle_t* get_i2c_bus_handle() {
+    return &i2c_bus_handle;
 }

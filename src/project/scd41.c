@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "driver/i2c_master.h"
 #include "esp_err.h"
 
@@ -15,7 +17,7 @@ esp_err_t scd41_init() {
     };
 
     esp_err_t add_device_err = i2c_master_bus_add_device (
-        i2c_bus_handle,
+        *get_i2c_bus_handle(),
         &dev_config,
         &scd41_handle
     );
@@ -38,7 +40,7 @@ esp_err_t scd41_start_periodic_measurement() {
 }
 
 
-esp_err_t scd41_read_measurement(measurement_t* m) {
+esp_err_t scd41_read_measurements(measurement_t* m) {
     const uint8_t read_measurement_cmd[2] = {0xec, 0x05};
     esp_err_t read_err = i2c_master_transmit(
         scd41_handle,
@@ -71,8 +73,6 @@ esp_err_t scd41_read_measurement(measurement_t* m) {
     return receive_err;
 }
 
-
-// TODO: implement data ready
 
 esp_err_t scd41_data_ready(uint32_t *is_ready) {
     const uint8_t data_ready_cmd[2] = {0xe4, 0xb8};

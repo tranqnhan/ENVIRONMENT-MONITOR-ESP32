@@ -7,4 +7,4 @@
 extern ssd1306_handle_t oled_dev_hdl;
 
 esp_err_t display_init(void);
-void display_measurements_task(const measurement_t *scd41_m);
+void display_measurements(const measurement_t *scd41_m);
