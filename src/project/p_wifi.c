@@ -12,7 +12,7 @@
 
 
 #define ESP_WIFI_SSID "esp_tutorial"
-#define ESP_WIFI_PASS "test_esp"
+#define ESP_WIFI_PASS "trouble123"
 #define ESP_WIFI_CHANNEL 1
 #define MAX_STA_CONN 2
 
@@ -61,14 +61,15 @@ void wifi_softap_init()
 
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
-    
     esp_wifi_start();
+
     is_wifi_softap_init = 1;
 }
 
-
 void wifi_softap_deinit() {
     if (is_wifi_softap_init) {
-        esp_wifi_stop();
+    esp_wifi_stop();
     }
 }
+
+#include "network_provisioning/network_scan.h"
