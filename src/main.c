@@ -25,6 +25,7 @@ static void setup() {
     err = scd41_start_periodic_measurement();
     log_command(err, "scd41 start periodic measurement");
 
+
     wifi_softap_init();
 }
 

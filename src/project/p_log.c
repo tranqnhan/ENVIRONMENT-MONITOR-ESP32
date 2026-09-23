@@ -3,40 +3,26 @@
 
 #include "p_log.h"
 
+#define DEBUG 1
+
 const char *DEVICE_NAME = "ENV MONITOR";
 
-int log_command(esp_err_t err, const char *cmd) {
+void log_command(esp_err_t err, const char *cmd) {
+    if (!DEBUG) return;
+
     if (err != ESP_OK) {
-        if (DEBUG) {
-            ESP_LOGE(DEVICE_NAME, "%s command failed: %s.",
-                cmd,
-                esp_err_to_name(err));
-        }
-        return 1;
+        ESP_LOGE(DEVICE_NAME, "%s command failed: %s.", cmd, esp_err_to_name(err));
     } else {
-        if (DEBUG) {
-            ESP_LOGI(DEVICE_NAME, "%s command success.",
-                cmd
-            );
-        }
-        return 0;
+        ESP_LOGI(DEVICE_NAME, "%s command success.", cmd);
     }
 }
 
-int log_command_int(int err, const char *cmd) {
+void log_command_int(int err, const char *cmd) {
+    if (!DEBUG) return;
+    
     if (err != 0) {
-        if (DEBUG) {
-            ESP_LOGE(DEVICE_NAME, "%s command failed: %d.",
-                cmd,
-                err);
-        }
-        return 1;
+        ESP_LOGE(DEVICE_NAME, "%s command failed: %d.", cmd, err);
     } else {
-        if (DEBUG) {
-            ESP_LOGI(DEVICE_NAME, "%s command success.",
-                cmd
-            );
-        }
-        return 0;
+        ESP_LOGI(DEVICE_NAME, "%s command success.", cmd);
     }
 }
