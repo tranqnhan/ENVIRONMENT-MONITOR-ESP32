@@ -6,4 +6,5 @@
 .vscode/settings.json
 archive/
 managed_components/
+components/
 .clangd
