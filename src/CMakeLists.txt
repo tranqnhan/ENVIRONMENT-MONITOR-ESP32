@@ -3,10 +3,7 @@
 
 FILE(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/src/*.*)
 
-idf_component_register(SRCS ${app_sources}
-    REQUIRES
-        network_provisioning
-)
+idf_component_register(SRCS ${app_sources})
 
 function(enable_cxx_compiler_flag_if_supported flag)
     string(FIND "${CMAKE_CXX_FLAGS}" "${flag}" flag_already_set)

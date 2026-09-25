@@ -5,7 +5,9 @@
 
 #include "esp_err.h"
 
+#include "p_http_server.h"
 #include "p_i2c.h"
+#include "p_nvs.h"
 #include "p_scd41.h"
 #include "p_display.h"
 #include "p_log.h"
@@ -13,7 +15,12 @@
 
 
 static void setup() {
-    esp_err_t err = i2c_init();
+
+    esp_err_t err;
+    
+    nvs_init();
+
+    err = i2c_init();
     log_command(err, "i2c init");
 
     err = display_init();
@@ -26,7 +33,8 @@ static void setup() {
     log_command(err, "scd41 start periodic measurement");
 
 
-    wifi_softap_init();
+   wifi_softap_init();
+   http_server_init();
 }
 
 

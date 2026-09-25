@@ -11,37 +11,44 @@
 #include "p_wifi.h"
 
 
-#define ESP_WIFI_SSID "esp_tutorial"
-#define ESP_WIFI_PASS "trouble123"
+#define ESP_WIFI_SSID "esp123123"
+#define ESP_WIFI_PASS "abcdefg12345"
 #define ESP_WIFI_CHANNEL 1
 #define MAX_STA_CONN 2
 
 
-uint16_t is_wifi_softap_init = 0;
-
-
+static bool is_wifi_softap_init = false;
+static esp_event_handler_instance_t wifi_event_instance;
 
 static void wifi_event_handler(void *args, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGI(DEVICE_NAME, "Event nr: %ld!\n", event_id);
+    ESP_LOGI(DEVICE_NAME, "event: %ld\n", event_id);
 }
 
 void wifi_softap_init() 
 {
-    esp_netif_init();
-    esp_event_loop_create_default();
+    esp_err_t err;
+
+    err = esp_netif_init();
+    log_command(err, "netif_init");
+    
+    err = esp_event_loop_create_default();
+    log_command(err, "esp_event_loop_create");
+
     esp_netif_create_default_wifi_ap();
     
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
-    esp_wifi_init(&wifi_init_config);
+    err = esp_wifi_init(&wifi_init_config);
+    log_command(err, "wifi_init");
 
-    esp_event_handler_instance_register(
+    err = esp_event_handler_instance_register(
         WIFI_EVENT, 
         ESP_EVENT_ANY_ID,
         &wifi_event_handler,
         NULL,
-        NULL
+        &wifi_event_instance // Keep the handle for deinit
     );
+    log_command(err, "event_handler_instance_register");
 
 
     wifi_config_t wifi_config = {
@@ -51,7 +58,7 @@ void wifi_softap_init()
             .channel = ESP_WIFI_CHANNEL,
             .password = ESP_WIFI_PASS,
             .max_connection = MAX_STA_CONN,
-            .authmode = WIFI_AUTH_WPA2_PSK,
+            .authmode = WIFI_AUTH_WPA3_PSK,
             .pmf_cfg = {
                 .required = true,
             }
@@ -59,17 +66,32 @@ void wifi_softap_init()
 
     };
 
-    esp_wifi_set_mode(WIFI_MODE_AP);
-    esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
-    esp_wifi_start();
+    err = esp_wifi_set_mode(WIFI_MODE_AP);
+    log_command(err, "esp_wifi_set_mode(WIFI_MODE_AP)");
 
-    is_wifi_softap_init = 1;
+    err = esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+    log_command(err, "esp_wifi_set_config(WIFI_IF_AP, &wifi_config)");
+
+    err = esp_wifi_start();
+    log_command(err, "esp_wifi_start");
+
+    is_wifi_softap_init = true;
 }
 
 void wifi_softap_deinit() {
     if (is_wifi_softap_init) {
-    esp_wifi_stop();
+        ESP_ERROR_CHECK(
+            esp_event_handler_instance_unregister(
+                WIFI_EVENT,
+                ESP_EVENT_ANY_ID,
+                wifi_event_instance
+            )
+        );
+
+        ESP_ERROR_CHECK(esp_wifi_stop());
+        ESP_ERROR_CHECK(esp_wifi_deinit());
+
+        is_wifi_softap_init = false;
     }
 }
 
-#include "network_provisioning/network_scan.h"
