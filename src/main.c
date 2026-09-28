@@ -18,8 +18,6 @@ static void setup() {
 
     esp_err_t err;
     
-    nvs_init();
-
     err = i2c_init();
     log_command(err, "i2c init");
 
@@ -33,8 +31,9 @@ static void setup() {
     log_command(err, "scd41 start periodic measurement");
 
 
-   wifi_softap_init();
-   http_server_init();
+    nvs_init();
+    // wifi_init();
+    // http_server_init();
 }
 
 
