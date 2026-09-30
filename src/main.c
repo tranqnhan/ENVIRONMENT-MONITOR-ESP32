@@ -32,8 +32,9 @@ static void setup() {
 
 
     nvs_init();
-    // wifi_init();
+    wifi_init();
     // http_server_init();
+
 }
 
 
