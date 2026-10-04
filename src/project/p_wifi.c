@@ -114,7 +114,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
                 esp_wifi_connect();
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
-                ESP_LOGI(TAG, "wifi disconnected");
+                ESP_LOGI(TAG, "Wi-Fi disconnected");
                 break;
             default:
                 break;
@@ -125,18 +125,19 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     if (event_base == NETWORK_PROV_EVENT) {
         switch (event_id) {
             case NETWORK_PROV_START:
-                ESP_LOGI(TAG, "start provisioning");
+                ESP_LOGI(TAG, "Start provisioning");
                 break;
             case NETWORK_PROV_WIFI_CRED_RECV:
                 wifi_sta_config_t *wifi_config = (wifi_sta_config_t *)event_data;
-                ESP_LOGI(TAG, "received wifi credentials %s", (char *) wifi_config->ssid);
+                ESP_LOGI(TAG, "Received wifi credentials %s", (char *) wifi_config->ssid);
                 break;
             case NETWORK_PROV_WIFI_CRED_SUCCESS:
-                ESP_LOGI(TAG, "provisioning successful");
+                ESP_LOGI(TAG, "Provisioning successful");
                 break;
 
             case NETWORK_PROV_WIFI_CRED_FAIL:
-                ESP_LOGE(TAG, "provisioning failed");
+                ESP_LOGE(TAG, "Provisioning failed");
+                network_prov_mgr_reset_wifi_sm_state_on_failure();
                 break;
             default:
                 break;
