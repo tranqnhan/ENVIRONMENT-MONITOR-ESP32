@@ -1,18 +1,32 @@
+#include "button_types.h"
 #include "esp_err.h"
-
+#include "esp_log.h"
 #include "ssd1306.h"
 
+#include "p_button.h"
 #include "p_i2c.h"
 #include "p_display.h"
 #include "p_scd41.h"
 
 
+static const char *TAG = "DISPLAY";
+
 ssd1306_handle_t oled_dev_hdl;
+
+static void display_change_screen(void *arg,void *usr_data)
+{
+    ESP_LOGI(TAG, "BUTTON_LONG_PRESS_START_1");
+}
+
 
 esp_err_t display_init(void) {
     ssd1306_config_t dev_cfg = I2C_SSD1306_128x32_CONFIG_DEFAULT;
     esp_err_t err = ssd1306_init(*get_i2c_bus_handle(), &dev_cfg, &oled_dev_hdl);
     
+    button_handle_t gpio_button = register_gpio_button(GPIO_NUM_6);
+    regiter_gpio_button_callback(gpio_button, display_change_screen); 
+
+
     return err;
 }
 

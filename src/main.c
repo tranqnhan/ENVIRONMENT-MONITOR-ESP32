@@ -5,7 +5,6 @@
 
 #include "esp_err.h"
 
-#include "p_http_server.h"
 #include "p_i2c.h"
 #include "p_nvs.h"
 #include "p_scd41.h"
@@ -56,7 +55,6 @@ static void environment_monitor_task(void *pvParameter) {
 
 }
 
-
 void app_main(void)
 {
     // Give USB Serial/JTAG time to connect
@@ -67,3 +65,4 @@ void app_main(void)
     xTaskCreate(&environment_monitor_task, "Environment Monitor", 1500, NULL, 5, NULL);
 
 }
+

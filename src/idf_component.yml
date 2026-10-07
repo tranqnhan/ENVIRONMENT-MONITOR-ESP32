@@ -3,3 +3,5 @@ dependencies:
     version: "^1.2.5"
   k0i05/esp_ssd1306:
     version: "^1.2.7"
+  espressif/button:
+    version: "^4.2.1"
