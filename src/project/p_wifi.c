@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include "esp_err.h"
 #include "esp_event.h"
@@ -11,16 +12,22 @@
 #include "esp_wifi_types_generic.h"
 #include "network_provisioning/manager.h"
 #include "network_provisioning/scheme_ble.h"
+#include "esp_random.h"
 
 #include "p_wifi.h"
 
 
-static const char *TAG = "WIFI";
+#define PASSWORD_LEN 8
+#define USERNAME_LEN 5
 
+static const char *USERNAME_HEADER = "EMS_DEVICE_";
+
+static const char *TAG = "WIFI";
 
 static void wifi_register_events();
 static void wifi_start_provision();
 static void wifi_start_station();
+
 
 void wifi_init() 
 {
@@ -49,6 +56,23 @@ void wifi_init()
 
 }
 
+
+static void generate_password(char *out, size_t out_len)
+{
+    static const char alphabet[] =
+        "abcdefghijkmnopqrstuvwxyz"
+        "0123456789";
+
+
+    for (size_t i = 0; i < out_len - 1; i++) {
+        uint32_t r = esp_random();
+        out[i] = alphabet[r % (sizeof(alphabet) - 1)];
+    }
+
+    out[out_len - 1] = '\0';
+}
+
+
 static void wifi_start_provision() 
 {
     // Network provisioning configurations
@@ -64,14 +88,20 @@ static void wifi_start_provision()
     int verifier_len = 0;
     const int salt_len = 16;
 
-    const char *username = "BLE_ESP32_PROV";
-    const char *password = "12345678";
+    char username[strlen(USERNAME_HEADER) + USERNAME_LEN + 1];
+    char usernameTail[USERNAME_LEN + 1];
+    generate_password(usernameTail, USERNAME_LEN + 1);
+    sprintf(username, "%s%s", USERNAME_HEADER, usernameTail);
+
+    char password[PASSWORD_LEN + 1];
+    generate_password(password, PASSWORD_LEN);
+
 
     ESP_ERROR_CHECK(esp_srp_gen_salt_verifier(
         username,
         strlen(username),
         password,
-        strlen(password),
+        PASSWORD_LEN,
         &salt,
         salt_len,                
         &verifier,
