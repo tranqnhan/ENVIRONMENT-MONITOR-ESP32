@@ -19,7 +19,7 @@
 
 #define PASSWORD_LEN 8
 #define USERNAME_LEN 5
-
+#define SALT_LEN 16
 static const char *USERNAME_HEADER = "EMS_DEVICE_";
 
 static const char *TAG = "WIFI";
@@ -86,7 +86,6 @@ static void wifi_start_provision()
     char *salt = NULL;
     char *verifier = NULL;
     int verifier_len = 0;
-    const int salt_len = 16;
 
     char username[strlen(USERNAME_HEADER) + USERNAME_LEN + 1];
     char usernameTail[USERNAME_LEN + 1];
@@ -96,6 +95,7 @@ static void wifi_start_provision()
     char password[PASSWORD_LEN + 1];
     generate_password(password, PASSWORD_LEN);
 
+    ESP_LOGI(TAG, "username %s password %s", username, password);
 
     ESP_ERROR_CHECK(esp_srp_gen_salt_verifier(
         username,
@@ -103,14 +103,14 @@ static void wifi_start_provision()
         password,
         PASSWORD_LEN,
         &salt,
-        salt_len,                
+        SALT_LEN,                
         &verifier,
         &verifier_len
     ));
 
     network_prov_security2_params_t sec2_params = {
         .salt = salt,
-        .salt_len = salt_len,
+        .salt_len = SALT_LEN,
         .verifier = verifier,
         .verifier_len = verifier_len
     };
