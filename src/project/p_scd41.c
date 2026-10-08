@@ -74,7 +74,7 @@ esp_err_t scd41_read_measurements(measurement_t* m) {
 }
 
 
-esp_err_t scd41_data_ready(uint32_t *is_ready) {
+esp_err_t scd41_data_ready(bool *is_ready) {
     const uint8_t data_ready_cmd[2] = {0xe4, 0xb8};
     esp_err_t data_ready_err = i2c_master_transmit(
         scd41_handle,

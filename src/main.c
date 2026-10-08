@@ -1,5 +1,3 @@
-#include <stdint.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -10,7 +8,7 @@
 #include "p_scd41.h"
 #include "p_display.h"
 #include "p_log.h"
-#include "p_wifi.h"
+#include "p_tasks.h"
 
 
 static void setup() {
@@ -29,31 +27,11 @@ static void setup() {
     err = scd41_start_periodic_measurement();
     log_command(err, "scd41 start periodic measurement");
 
-
     nvs_init();
-    wifi_init();
-    // http_server_init();
-
 }
 
 
-static void environment_monitor_task(void *pvParameter) {
-    uint32_t is_data_ready;
-    measurement_t scd41_m;
 
-    while (1) {
-        is_data_ready = 0;
-        scd41_data_ready(&is_data_ready);
-
-        if (is_data_ready) {
-            scd41_read_measurements(&scd41_m);
-            display_measurements(&scd41_m);
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
-
-}
 
 void app_main(void)
 {
@@ -62,7 +40,7 @@ void app_main(void)
 
     setup();
 
-    xTaskCreate(&environment_monitor_task, "Environment Monitor", 1500, NULL, 5, NULL);
+    xTaskCreate(&environment_monitor_task_measure, "Environment Monitor", 1500, NULL, 5, NULL);
 
 }
 

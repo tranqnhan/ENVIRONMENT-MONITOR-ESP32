@@ -14,4 +14,4 @@ typedef struct {
 esp_err_t scd41_init();
 esp_err_t scd41_start_periodic_measurement();
 esp_err_t scd41_read_measurements(measurement_t* m);
-esp_err_t scd41_data_ready(uint32_t *is_ready);
+esp_err_t scd41_data_ready(bool *is_ready);
