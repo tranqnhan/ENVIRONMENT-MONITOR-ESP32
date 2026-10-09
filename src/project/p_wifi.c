@@ -17,17 +17,14 @@
 #include "p_wifi.h"
 
 
-#define PASSWORD_LEN 8
-#define USERNAME_LEN 5
+
 #define SALT_LEN 16
-static const char *USERNAME_HEADER = "EMS_DEVICE_";
+
+static const char *USERNAME_HEADER = "EMS_";
 
 static const char *TAG = "WIFI";
 
 static void wifi_register_events();
-static void wifi_start_provision();
-static void wifi_start_station();
-
 
 void wifi_init() 
 {
@@ -44,15 +41,6 @@ void wifi_init()
     wifi_register_events();
 
 
-    // Wifi provision status
-    bool is_wifi_provisioned = false;
-    ESP_ERROR_CHECK(network_prov_mgr_is_wifi_provisioned(&is_wifi_provisioned));
-
-    if (is_wifi_provisioned) {
-        wifi_start_station();
-    } else {
-        wifi_start_provision();
-    }
 
 }
 
@@ -73,7 +61,7 @@ static void generate_password(char *out, size_t out_len)
 }
 
 
-static void wifi_start_provision() 
+credential_ble_t wifi_start_provision() 
 {
     // Network provisioning configurations
     network_prov_mgr_config_t provision_config = {
@@ -87,13 +75,13 @@ static void wifi_start_provision()
     char *verifier = NULL;
     int verifier_len = 0;
 
-    char username[strlen(USERNAME_HEADER) + USERNAME_LEN + 1];
-    char usernameTail[USERNAME_LEN + 1];
-    generate_password(usernameTail, USERNAME_LEN + 1);
-    sprintf(username, "%s%s", USERNAME_HEADER, usernameTail);
+    char username[USERNAME_LEN + 1];
+    char usernameTail[(USERNAME_LEN - strlen(USERNAME_HEADER)) + 1];
+    generate_password(usernameTail, sizeof(usernameTail));
+    snprintf(username, sizeof(username), "%s%s", USERNAME_HEADER, usernameTail);
 
     char password[PASSWORD_LEN + 1];
-    generate_password(password, PASSWORD_LEN);
+    generate_password(password, sizeof(password));
 
     ESP_LOGI(TAG, "username %s password %s", username, password);
 
@@ -101,7 +89,7 @@ static void wifi_start_provision()
         username,
         strlen(username),
         password,
-        PASSWORD_LEN,
+        strlen(password),
         &salt,
         SALT_LEN,                
         &verifier,
@@ -126,10 +114,16 @@ static void wifi_start_provision()
     );
 
     ESP_LOGI(TAG, "BLE provisioning start");
+
+    credential_ble_t cred_ble;
+    snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
+    snprintf(cred_ble.password, sizeof(cred_ble.password),"%s", password);
+
+    return cred_ble;
 }
 
 
-static void wifi_start_station() 
+void wifi_start_station() 
 {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());

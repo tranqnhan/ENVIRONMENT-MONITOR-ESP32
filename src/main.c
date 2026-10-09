@@ -41,6 +41,7 @@ void app_main(void)
     setup();
 
     xTaskCreate(&environment_monitor_task_measure, "Environment Monitor", 1500, NULL, 5, NULL);
+    //xTaskCreate(&environment_monitor_task_wifi_provision, "Environment Monitor", 2048, NULL, 5, NULL);
 
 }
 
