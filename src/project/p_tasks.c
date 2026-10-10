@@ -46,14 +46,21 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
 
         display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROV");
 
-        while (1) {
+        while (provision_time_remaining > 0) {
             provision_time_remaining -= 1;
 
             display_wifi_provision_time(provision_time_remaining);
 
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
+
+        wifi_stop_provision();
+
+        display_wifi_provision_message("TIMEOUT.");
+
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
+
 
 
     vTaskDelete(NULL);

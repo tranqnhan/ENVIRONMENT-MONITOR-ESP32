@@ -10,4 +10,5 @@ typedef struct {
 
 void wifi_init();
 credential_ble_t wifi_start_provision();
+void wifi_stop_provision();
 void wifi_start_station();

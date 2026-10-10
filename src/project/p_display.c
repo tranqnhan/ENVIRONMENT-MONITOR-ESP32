@@ -35,6 +35,7 @@ esp_err_t display_init(void) {
 void display_measurements(const measurement_t *scd41_m) {
     ssd1306_clear_display(oled_dev_hdl, false);
     
+
     char co2_s[11];
     char tmp_s[17];
     char hmd_s[17];

@@ -119,7 +119,13 @@ credential_ble_t wifi_start_provision()
     snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
     snprintf(cred_ble.password, sizeof(cred_ble.password),"%s", password);
 
+
     return cred_ble;
+}
+
+
+void wifi_stop_provision() {
+    network_prov_mgr_deinit();
 }
 
 
