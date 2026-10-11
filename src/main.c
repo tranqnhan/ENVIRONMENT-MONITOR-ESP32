@@ -8,8 +8,7 @@
 #include "p_scd41.h"
 #include "p_display.h"
 #include "p_log.h"
-#include "p_tasks.h"
-
+#include "p_screen.h"
 
 static void setup() {
 
@@ -28,6 +27,8 @@ static void setup() {
     log_command(err, "scd41 start periodic measurement");
 
     nvs_init();
+
+    screen_mgr_init();
 }
 
 
@@ -40,7 +41,6 @@ void app_main(void)
 
     setup();
 
-    xTaskCreate(&environment_monitor_task_measure, "Environment Monitor", 1500, NULL, 5, NULL);
     //xTaskCreate(&environment_monitor_task_wifi_provision, "Environment Monitor", 2048, NULL, 5, NULL);
 
 }

@@ -2,6 +2,7 @@
 #include "network_provisioning/manager.h"
 
 #include "p_tasks.h"
+#include "p_screen.h"
 #include "p_wifi.h"
 #include "p_scd41.h"
 #include "p_display.h"
@@ -32,7 +33,7 @@ void environment_monitor_task_measure(void *pvParameter) {
 
 // WIFI PROVISION TASK
 
-#define MAX_PROVISION_TIME_SECS 300
+#define MAX_PROVISION_TIME_SECS 60
 static int provision_time_remaining = 0;
 
 void environment_monitor_task_wifi_provision(void *pvParameter) {
@@ -46,27 +47,28 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
 
     if (is_wifi_provisioned) {
         wifi_start_station();
-    } else {
-        credential_ble_t cred_ble = wifi_start_provision();
-
-        display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROVIS");
-
-        while (provision_time_remaining > 0) {
-            provision_time_remaining -= 1;
-
-            display_wifi_provision_time(provision_time_remaining);
-
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-
-        wifi_stop_provision();
-
-        display_wifi_provision_message("TIMEOUT");
-
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        screen_change_to(MEASUREMENT_SCR);
+        return;
     }
 
 
+    credential_ble_t cred_ble = wifi_start_provision();
 
-    vTaskDelete(NULL);
+    display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROVIS");
+
+    while (provision_time_remaining > 0) {
+        provision_time_remaining -= 1;
+
+        display_wifi_provision_time(provision_time_remaining);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+    wifi_stop_provision();
+
+    display_wifi_provision_message("TIMEOUT");
+
+    vTaskDelay(pdMS_TO_TICKS(3000));
+
+    screen_change_to(MEASUREMENT_SCR);
 }

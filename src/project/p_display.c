@@ -1,40 +1,47 @@
-#include "button_types.h"
+#include "freertos/idf_additions.h"
+#include "p_screen.h"
+#include "string.h"
 #include "esp_err.h"
-#include "esp_log.h"
 #include "ssd1306.h"
 
-#include "p_button.h"
 #include "p_i2c.h"
 #include "p_display.h"
 #include "p_scd41.h"
 
 
-static const char *TAG = "DISPLAY";
-
 ssd1306_handle_t oled_dev_hdl;
-
-static void display_change_screen(void *arg,void *usr_data)
-{
-    ESP_LOGI(TAG, "BUTTON_LONG_PRESS_START_1");
-}
 
 
 esp_err_t display_init(void) {
     ssd1306_config_t dev_cfg = I2C_SSD1306_128x32_CONFIG_DEFAULT;
     esp_err_t err = ssd1306_init(*get_i2c_bus_handle(), &dev_cfg, &oled_dev_hdl);
     
-    button_handle_t gpio_button = register_gpio_button(GPIO_NUM_6);
-    regiter_gpio_button_callback(gpio_button, display_change_screen); 
-
     ssd1306_set_contrast(oled_dev_hdl, 0xff);
 
     return err;
 }
 
 
+static bool _take_screen_semaphore(enum Screen screen) {
+    if (!xSemaphoreTake(xScreenMutex, 0)) {
+        return false;
+    }
+
+    if (screen_get_current() != screen) {
+        xSemaphoreGive(xScreenMutex);
+        return false;
+    }
+
+    xSemaphoreGive(xScreenMutex);
+
+    return true;
+}
+
+
 void display_measurements(const measurement_t *scd41_m) {
+    if (!_take_screen_semaphore(MEASUREMENT_SCR)) return;
+
     ssd1306_clear_display(oled_dev_hdl, false);
-    
 
     char co2_s[11];
     char tmp_s[17];
@@ -47,10 +54,13 @@ void display_measurements(const measurement_t *scd41_m) {
     ssd1306_display_text(oled_dev_hdl, 0, co2_s, false);
     ssd1306_display_text(oled_dev_hdl, 1, tmp_s, false);
     ssd1306_display_text(oled_dev_hdl, 2, hmd_s, false);
+    
 }
 
 
 void display_wifi_provision(const char *username, const char *password, const uint32_t seconds_remaining, const char *message) {
+    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+    
     ssd1306_clear_display(oled_dev_hdl, false);
 
     const char *username_text = "USR ";
@@ -74,16 +84,22 @@ void display_wifi_provision(const char *username, const char *password, const ui
     ssd1306_display_text(oled_dev_hdl, 1, password_disp, false);
     ssd1306_display_text(oled_dev_hdl, 2, timer_disp, false);
     ssd1306_display_text(oled_dev_hdl, 3, message, false);
+
 }
 
 
 void display_wifi_provision_message(const char *message) {
+    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+
     ssd1306_clear_display_page(oled_dev_hdl, 3, false);
     ssd1306_display_text(oled_dev_hdl, 3, message, false);
+
 }
 
 
 void display_wifi_provision_time(const uint32_t seconds_remaining) {
+    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+    
     const int minutes = seconds_remaining / 60;
     const int seconds = seconds_remaining % 60;
 

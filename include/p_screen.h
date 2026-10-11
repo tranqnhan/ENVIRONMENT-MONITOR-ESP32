@@ -1,24 +1,25 @@
 #pragma once
 
+#include "freertos/idf_additions.h"
+
 enum Screen {
-    MEASUREMENT,
-    WIFI_PROVISION,
+    MEASUREMENT_SCR,
+    WIFI_PROVISION_SCR,
     NUM_SCREEN
 };
 
 typedef struct {
-    void (*onExit)(void);
-    void (*onEnter)(void);
+    void (*on_exit)(void);
+    void (*on_enter)(void);
 } screen_t;
 
-
-screen_t screens[NUM_SCREEN];
+extern SemaphoreHandle_t xScreenMutex;
 
 void screen_mgr_init();
+void screen_change_to(enum Screen screen);
+enum Screen screen_get_current();
 
 void screen_wifi_provision_on_enter();
 void screen_wifi_provision_on_exit();
 void screen_measurement_on_enter();
 void screen_measurement_on_exit();
-void screen_change_to(enum Screen screen);
-
