@@ -7,6 +7,8 @@
 #include "p_display.h"
 
 
+// READ ENVIRONMENT TASK
+
 void environment_monitor_task_measure(void *pvParameter) {
     bool is_data_ready;
     measurement_t scd41_m;
@@ -27,6 +29,9 @@ void environment_monitor_task_measure(void *pvParameter) {
 }
 
 
+
+// WIFI PROVISION TASK
+
 #define MAX_PROVISION_TIME_SECS 300
 static int provision_time_remaining = 0;
 
@@ -44,7 +49,7 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
     } else {
         credential_ble_t cred_ble = wifi_start_provision();
 
-        display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROV");
+        display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROVIS");
 
         while (provision_time_remaining > 0) {
             provision_time_remaining -= 1;
@@ -56,7 +61,7 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
 
         wifi_stop_provision();
 
-        display_wifi_provision_message("TIMEOUT.");
+        display_wifi_provision_message("TIMEOUT");
 
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
