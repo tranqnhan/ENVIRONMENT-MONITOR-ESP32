@@ -21,7 +21,6 @@
 #define SALT_LEN 16
 
 static const char *USERNAME_HEADER = "EMS_";
-
 static const char *TAG = "WIFI";
 
 static void wifi_register_events();
@@ -39,9 +38,6 @@ void wifi_init()
 
     // Register events
     wifi_register_events();
-
-
-
 }
 
 
@@ -60,6 +56,11 @@ static void generate_password(char *out, size_t out_len)
     out[out_len - 1] = '\0';
 }
 
+bool wifi_is_provision() {
+    bool is_wifi_provisioned = false;
+    ESP_ERROR_CHECK(network_prov_mgr_is_wifi_provisioned(&is_wifi_provisioned));
+    return is_wifi_provisioned;
+}
 
 credential_ble_t wifi_start_provision() 
 {

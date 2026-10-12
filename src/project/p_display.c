@@ -22,7 +22,7 @@ esp_err_t display_init(void) {
 }
 
 
-static bool _take_screen_semaphore(enum Screen screen) {
+static bool _take_screen_semaphore(const enum Screen screen) {
     if (!xSemaphoreTake(xScreenMutex, 0)) {
         return false;
     }
@@ -99,7 +99,7 @@ void display_wifi_provision_message(const char *message) {
 
 void display_wifi_provision_time(const uint32_t seconds_remaining) {
     if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
-    
+
     const int minutes = seconds_remaining / 60;
     const int seconds = seconds_remaining % 60;
 

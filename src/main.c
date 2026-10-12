@@ -9,6 +9,7 @@
 #include "p_display.h"
 #include "p_log.h"
 #include "p_screen.h"
+#include "p_wifi.h"
 
 static void setup() {
 
@@ -27,7 +28,7 @@ static void setup() {
     log_command(err, "scd41 start periodic measurement");
 
     nvs_init();
-
+    wifi_init();
     screen_mgr_init();
 }
 

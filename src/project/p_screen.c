@@ -1,3 +1,4 @@
+#include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include "p_wifi.h"
 #include "portmacro.h"
@@ -7,15 +8,19 @@
 #include "p_button.h"
 #include "p_screen.h"
 #include "p_tasks.h"
+#include <stdint.h>
 
 #define INCLUDE_vTaskSuspend 1
 
 static enum Screen current_screen;
+SemaphoreHandle_t xScreenMutex;
+
 static screen_t screens[NUM_SCREEN];
 static TaskHandle_t xMeasurementTask = NULL;
 static TaskHandle_t xWifiProvisionTask = NULL;
 
-SemaphoreHandle_t xScreenMutex;
+static const char *TAG = "SCREEN";
+
 
 static void _on_button_change_screen(void *arg,void *usr_data) {
     enum Screen next_screen = NUM_SCREEN;
@@ -36,10 +41,12 @@ static void _on_button_change_screen(void *arg,void *usr_data) {
 
 void screen_mgr_init() {
     xScreenMutex = xSemaphoreCreateMutex();
-    screens[MEASUREMENT_SCR].on_enter = screen_measurement_on_enter;
-    screens[MEASUREMENT_SCR].on_exit = screen_measurement_on_exit;
-    screens[WIFI_PROVISION_SCR].on_enter = screen_wifi_provision_on_enter;
-    screens[WIFI_PROVISION_SCR].on_exit = screen_wifi_provision_on_exit;
+
+    screens[MEASUREMENT_SCR].on_enter = &screen_measurement_on_enter;
+    screens[MEASUREMENT_SCR].on_exit = &screen_measurement_on_exit;
+
+    screens[WIFI_PROVISION_SCR].on_enter = &screen_wifi_provision_on_enter;
+    screens[WIFI_PROVISION_SCR].on_exit = &screen_wifi_provision_on_exit;
     
 
     button_handle_t gpio_button = register_gpio_button(GPIO_NUM_6);
@@ -52,19 +59,37 @@ void screen_mgr_init() {
 }
 
 
-void screen_change_to(enum Screen screen) {
+void screen_change_to_task(void *pxScreen) {
     if (xSemaphoreTake(xScreenMutex, portMAX_DELAY)) {
+        const enum Screen screen = (enum Screen)(intptr_t)pxScreen;
+
         if (current_screen == screen || screen >= NUM_SCREEN) {
             xSemaphoreGive(xScreenMutex);
             return;
         }
 
-        screens[current_screen].on_exit();
+        ESP_LOGI(TAG, "changing screen from %d to %d\n", current_screen, screen);
+
+        // TODO: problematic, 
+        // since vTaskDelete here would end this
+        // but some part of the program may run it
+        // such as button
+        // may need to create separate screens
+        screens[current_screen].on_exit(); // DO NOT PUT vTaskDelete here!
         current_screen = screen;
         screens[current_screen].on_enter();
 
+
         xSemaphoreGive(xScreenMutex);
     }
+
+    vTaskDelete(NULL);
+}
+
+
+
+void screen_change_to(const enum Screen screen) {
+    xTaskCreate(&screen_change_to_task, "Change Screen", 1000, (void *)(intptr_t)screen, 1, NULL);
 }
 
 
@@ -74,6 +99,7 @@ enum Screen screen_get_current() {
 
 
 void screen_measurement_on_enter() {
+    ESP_LOGI(TAG, "enter measurement screen");
     if (xMeasurementTask == NULL) {
         xTaskCreate(&environment_monitor_task_measure, "Measurement", 1500, NULL, 5, &xMeasurementTask);
     }
@@ -81,12 +107,13 @@ void screen_measurement_on_enter() {
 
 
 void screen_measurement_on_exit() {
-
+    ESP_LOGI(TAG, "exit measurement screen");
 }
 
 
 
 void screen_wifi_provision_on_enter() {
+    ESP_LOGI(TAG, "enter wifi provisioning screen");
     if (xWifiProvisionTask == NULL) {
         xTaskCreate(&environment_monitor_task_wifi_provision, "Wi-Fi Provision", 2048, NULL, 5, &xWifiProvisionTask);
     }
@@ -94,7 +121,14 @@ void screen_wifi_provision_on_enter() {
 
 
 void screen_wifi_provision_on_exit() {
+    ESP_LOGI(TAG, "exiting wifi provision screen...");
+    
     wifi_stop_provision();
-    vTaskDelete(xWifiProvisionTask);
+
+    TaskHandle_t xTemp = xWifiProvisionTask;
     xWifiProvisionTask = NULL;
+    
+    vTaskDelete(xTemp);
+
+    ESP_LOGI(TAG, "wifi provision screen exit!");
 }

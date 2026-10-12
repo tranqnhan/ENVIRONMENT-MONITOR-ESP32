@@ -1,4 +1,5 @@
 #include "freertos/FreeRTOS.h"
+#include "freertos/idf_additions.h"
 #include "network_provisioning/manager.h"
 
 #include "p_tasks.h"
@@ -37,24 +38,19 @@ void environment_monitor_task_measure(void *pvParameter) {
 static int provision_time_remaining = 0;
 
 void environment_monitor_task_wifi_provision(void *pvParameter) {
-    provision_time_remaining = MAX_PROVISION_TIME_SECS;
 
-    wifi_init();
-    
     // Wifi provision status
-    bool is_wifi_provisioned = false;
-    ESP_ERROR_CHECK(network_prov_mgr_is_wifi_provisioned(&is_wifi_provisioned));
-
-    if (is_wifi_provisioned) {
+    if (wifi_is_provision()) {
         wifi_start_station();
         screen_change_to(MEASUREMENT_SCR);
         return;
     }
 
-
     credential_ble_t cred_ble = wifi_start_provision();
 
     display_wifi_provision(cred_ble.username, cred_ble.password, provision_time_remaining, "BLE WIFI PROVIS");
+
+    provision_time_remaining = MAX_PROVISION_TIME_SECS;
 
     while (provision_time_remaining > 0) {
         provision_time_remaining -= 1;
@@ -64,11 +60,11 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
-    wifi_stop_provision();
-
     display_wifi_provision_message("TIMEOUT");
 
     vTaskDelay(pdMS_TO_TICKS(3000));
 
     screen_change_to(MEASUREMENT_SCR);
+
+    vTaskDelete(NULL);
 }
