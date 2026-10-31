@@ -18,8 +18,7 @@ Button is used to swap screen between wifi provision display and the measurement
 
 #### Video
 
-https://github.com/tranhqnhan/ENVIRONMENT-MONITOR-ESP32/docs/ems_monitor_work.mp4
-
+https://github.com/user-attachments/assets/9f2d29ea-7e60-432a-91cb-5289f5d07df7
 
 ### TODO
 
