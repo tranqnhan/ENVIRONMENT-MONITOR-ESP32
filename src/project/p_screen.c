@@ -1,5 +1,6 @@
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
+#include "p_display.h"
 #include "p_wifi.h"
 #include "portmacro.h"
 #include "button_types.h"
@@ -60,36 +61,52 @@ void screen_mgr_init() {
 
 
 void screen_change_to_task(void *pxScreen) {
+
+    const enum Screen screen = (enum Screen)(intptr_t)pxScreen;
+
     if (xSemaphoreTake(xScreenMutex, portMAX_DELAY)) {
-        const enum Screen screen = (enum Screen)(intptr_t)pxScreen;
 
         if (current_screen == screen || screen >= NUM_SCREEN) {
             xSemaphoreGive(xScreenMutex);
             return;
         }
 
-        ESP_LOGI(TAG, "changing screen from %d to %d\n", current_screen, screen);
-
-        // TODO: problematic, 
-        // since vTaskDelete here would end this
-        // but some part of the program may run it
-        // such as button
-        // may need to create separate screens
-        screens[current_screen].on_exit(); // DO NOT PUT vTaskDelete here!
-        current_screen = screen;
-        screens[current_screen].on_enter();
-
-
         xSemaphoreGive(xScreenMutex);
     }
+
+    screens[current_screen].on_exit();
+
+    ESP_LOGI(TAG, "changing screen from %d to %d\n", current_screen, screen);
+    
+    if (xSemaphoreTake(xScreenMutex, portMAX_DELAY)) {
+        current_screen = screen;
+        xSemaphoreGive(xScreenMutex);
+    }
+
+    screens[current_screen].on_enter();
 
     vTaskDelete(NULL);
 }
 
 
-
 void screen_change_to(const enum Screen screen) {
     xTaskCreate(&screen_change_to_task, "Change Screen", 1000, (void *)(intptr_t)screen, 1, NULL);
+}
+
+
+bool screen_semaphore_check(const enum Screen screen) {
+    if (!xSemaphoreTake(xScreenMutex, 0)) {
+        return false;
+    }
+
+    if (screen_get_current() != screen) {
+        xSemaphoreGive(xScreenMutex);
+        return false;
+    }
+
+    xSemaphoreGive(xScreenMutex);
+
+    return true;
 }
 
 
@@ -103,6 +120,7 @@ void screen_measurement_on_enter() {
     if (xMeasurementTask == NULL) {
         xTaskCreate(&environment_monitor_task_measure, "Measurement", 1500, NULL, 5, &xMeasurementTask);
     }
+    display_measurements_intro();
 }
 
 

@@ -22,24 +22,8 @@ esp_err_t display_init(void) {
 }
 
 
-static bool _take_screen_semaphore(const enum Screen screen) {
-    if (!xSemaphoreTake(xScreenMutex, 0)) {
-        return false;
-    }
-
-    if (screen_get_current() != screen) {
-        xSemaphoreGive(xScreenMutex);
-        return false;
-    }
-
-    xSemaphoreGive(xScreenMutex);
-
-    return true;
-}
-
-
 void display_measurements(const measurement_t *scd41_m) {
-    if (!_take_screen_semaphore(MEASUREMENT_SCR)) return;
+    if (!screen_semaphore_check(MEASUREMENT_SCR)) return;
 
     ssd1306_clear_display(oled_dev_hdl, false);
 
@@ -58,8 +42,17 @@ void display_measurements(const measurement_t *scd41_m) {
 }
 
 
+void display_measurements_intro() {
+    if (!screen_semaphore_check(MEASUREMENT_SCR)) return;
+    ssd1306_clear_display(oled_dev_hdl, false);
+    ssd1306_display_text(oled_dev_hdl, 0, "CO2 0", false);
+    ssd1306_display_text(oled_dev_hdl, 1, "TMP 0", false);
+    ssd1306_display_text(oled_dev_hdl, 2, "HMD 0", false);
+}
+
+
 void display_wifi_provision(const char *username, const char *password, const uint32_t seconds_remaining, const char *message) {
-    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+    if (!screen_semaphore_check(WIFI_PROVISION_SCR)) return;
     
     ssd1306_clear_display(oled_dev_hdl, false);
 
@@ -89,7 +82,7 @@ void display_wifi_provision(const char *username, const char *password, const ui
 
 
 void display_wifi_provision_message(const char *message) {
-    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+    if (!screen_semaphore_check(WIFI_PROVISION_SCR)) return;
 
     ssd1306_clear_display_page(oled_dev_hdl, 3, false);
     ssd1306_display_text(oled_dev_hdl, 3, message, false);
@@ -98,7 +91,7 @@ void display_wifi_provision_message(const char *message) {
 
 
 void display_wifi_provision_time(const uint32_t seconds_remaining) {
-    if (!_take_screen_semaphore(WIFI_PROVISION_SCR)) return;
+    if (!screen_semaphore_check(WIFI_PROVISION_SCR)) return;
 
     const int minutes = seconds_remaining / 60;
     const int seconds = seconds_remaining % 60;
