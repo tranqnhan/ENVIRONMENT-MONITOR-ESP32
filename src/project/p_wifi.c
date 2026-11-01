@@ -15,7 +15,8 @@
 #include "esp_random.h"
 
 #include "p_wifi.h"
-
+#include "p_data.h"
+#include "p_nvs.h"
 
 
 #define SALT_LEN 16
@@ -41,7 +42,7 @@ void wifi_init()
 }
 
 
-static void generate_password(char *out, size_t out_len)
+static void generate_random_str(char *out, size_t out_len)
 {
     static const char alphabet[] =
         "abcdefghijkmnopqrstuvwxyz"
@@ -62,6 +63,10 @@ bool wifi_is_provision() {
     return is_wifi_provisioned;
 }
 
+
+/*
+    Note: Start provisioning creates a new username
+*/
 credential_ble_t wifi_start_provision() 
 {
     // Network provisioning configurations
@@ -78,11 +83,14 @@ credential_ble_t wifi_start_provision()
 
     char username[USERNAME_LEN + 1];
     char usernameTail[(USERNAME_LEN - strlen(USERNAME_HEADER)) + 1];
-    generate_password(usernameTail, sizeof(usernameTail));
+    generate_random_str(usernameTail, sizeof(usernameTail));
     snprintf(username, sizeof(username), "%s%s", USERNAME_HEADER, usernameTail);
 
+    nvs_save_string(NVS_USERNAME_KEY, username);
+    data_set_username(username, sizeof(username));
+
     char password[PASSWORD_LEN + 1];
-    generate_password(password, sizeof(password));
+    generate_random_str(password, sizeof(password));
 
     ESP_LOGI(TAG, "username %s password %s", username, password);
 
@@ -119,7 +127,6 @@ credential_ble_t wifi_start_provision()
     credential_ble_t cred_ble;
     snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
     snprintf(cred_ble.password, sizeof(cred_ble.password),"%s", password);
-
 
     return cred_ble;
 }

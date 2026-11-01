@@ -1,7 +1,8 @@
 #pragma once
 
-#define PASSWORD_LEN 8
-#define USERNAME_LEN 8
+#include <stdbool.h>
+
+#include "p_data.h"
 
 typedef struct {
     char username[USERNAME_LEN + 1];
