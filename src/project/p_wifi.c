@@ -160,7 +160,9 @@ static void _generate_random_str(char *out, size_t out_len)
 {
     static const char alphabet[] =
         "abcdefghijkmnopqrstuvwxyz"
-        "0123456789";
+        "0123456789"
+        "!@#$^&*"
+    ;
 
 
     for (size_t i = 0; i < out_len - 1; i++) {
