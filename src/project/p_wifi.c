@@ -45,7 +45,7 @@ void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
 
     wifi_start_register_callback(_init_http_and_ntp);
-    
+
     // Register events
     _wifi_register_events();
 }
@@ -258,8 +258,8 @@ static void _wifi_register_events(void)
 }
 
 static void _init_http_and_ntp(void) {
-    char server_url[SERVER_URL_LEN];
-    nvs_read_string(NVS_SERVER_URL, server_url, SERVER_URL_LEN);
+    char server_url[SERVER_URL_LEN + 1];
+    nvs_read_string(NVS_SERVER_URL, server_url, sizeof(server_url));
     http_client_init(server_url);
     time_sntp_init();
 }
