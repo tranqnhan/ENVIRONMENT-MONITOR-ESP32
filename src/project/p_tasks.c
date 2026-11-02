@@ -1,6 +1,5 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/idf_additions.h"
-#include "network_provisioning/manager.h"
 
 #include "p_tasks.h"
 #include "p_screen.h"
@@ -34,7 +33,6 @@ void environment_monitor_task_measure(void *pvParameter) {
 
 // WIFI PROVISION TASK
 
-#define MAX_PROVISION_TIME_SECS 60
 static int provision_time_remaining = 0;
 
 void environment_monitor_task_wifi_provision(void *pvParameter) {

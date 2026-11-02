@@ -4,7 +4,7 @@
 #include "p_nvs.h"
 
 
-esp_err_t nvs_init() {
+esp_err_t nvs_init(void) {
     esp_err_t err = nvs_flash_init();
 
     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||

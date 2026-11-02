@@ -5,7 +5,7 @@
 
 i2c_master_bus_handle_t i2c_bus_handle;
 
-esp_err_t i2c_init() {
+esp_err_t i2c_init(void) {
 
     // INITIALIZE I2C BUS
     i2c_master_bus_config_t i2c_bus_config = {
@@ -25,6 +25,6 @@ esp_err_t i2c_init() {
     return init_bus_err;
 }
 
-i2c_master_bus_handle_t* get_i2c_bus_handle() {
+i2c_master_bus_handle_t* get_i2c_bus_handle(void) {
     return &i2c_bus_handle;
 }

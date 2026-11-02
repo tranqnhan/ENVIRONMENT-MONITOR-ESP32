@@ -84,12 +84,12 @@ credential_ble_t wifi_start_provision(void)
     char *verifier = NULL;
     int verifier_len = 0;
 
-    char username[USERNAME_LEN + 1];
-    char usernameTail[(USERNAME_LEN - strlen(USERNAME_HEADER)) + 1];
+    char username[USERNAME_SIZE];
+    char usernameTail[(USERNAME_SIZE - 1 - strlen(USERNAME_HEADER)) + 1];
     _generate_random_str(usernameTail, sizeof(usernameTail));
     snprintf(username, sizeof(username), "%s%s", USERNAME_HEADER, usernameTail);
 
-    char password[PASSWORD_LEN + 1];
+    char password[PASSWORD_SIZE];
     _generate_random_str(password, sizeof(password));
 
     ESP_ERROR_CHECK(esp_srp_gen_salt_verifier(
@@ -179,13 +179,13 @@ static void _wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t 
         switch (event_id) {
             case WIFI_EVENT_STA_START:
                 esp_wifi_connect();
-
                 break;
             case WIFI_EVENT_STA_CONNECTED:
                 _is_wifi_connected = true;
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
                 ESP_LOGI(TAG, "Wi-Fi disconnected");
+                _is_wifi_connected = false;
                 break;
             default:
                 break;
@@ -260,9 +260,7 @@ static void _wifi_register_events(void)
 }
 
 static void _init_http_and_ntp(void) {
-    char server_url[SERVER_URL_LEN + 1];
-    nvs_read_string(NVS_SERVER_URL, server_url, sizeof(server_url));
-    http_client_init(server_url);
+    http_client_init();
     time_sntp_init();
 }
 

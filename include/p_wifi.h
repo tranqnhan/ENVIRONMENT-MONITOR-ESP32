@@ -8,8 +8,8 @@
 #define MAX_WIFI_START_CB 2
 
 typedef struct {
-    char username[USERNAME_LEN + 1];
-    char password[PASSWORD_LEN + 1];
+    char username[USERNAME_SIZE];
+    char password[PASSWORD_SIZE];
 } credential_ble_t;
 
 void wifi_init(void);

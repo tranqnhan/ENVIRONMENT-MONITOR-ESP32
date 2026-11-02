@@ -4,8 +4,6 @@
 #include "iot_button.h"
 #include <stdint.h>
 
-#define LONG_PRESS_TIME 2000
-
 button_handle_t register_gpio_button(uint16_t gpio_num) {
     const button_config_t btn_cfg = {0};
     const button_gpio_config_t btn_gpio_cfg = {

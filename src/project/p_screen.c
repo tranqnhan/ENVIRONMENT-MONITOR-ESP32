@@ -40,7 +40,7 @@ static void _on_button_change_screen(void *arg,void *usr_data) {
 }
 
 
-void screen_mgr_init() {
+void screen_mgr_init(void) {
     xScreenMutex = xSemaphoreCreateMutex();
 
     screens[MEASUREMENT_SCR].on_enter = &screen_measurement_on_enter;
@@ -110,12 +110,12 @@ bool screen_semaphore_check(const enum Screen screen) {
 }
 
 
-enum Screen screen_get_current() {
+enum Screen screen_get_current(void) {
     return current_screen;
 }
 
 
-void screen_measurement_on_enter() {
+void screen_measurement_on_enter(void) {
     ESP_LOGI(TAG, "enter measurement screen");
     if (xMeasurementTask == NULL) {
         xTaskCreate(&environment_monitor_task_measure, "Measurement", 1500, NULL, 5, &xMeasurementTask);
@@ -124,13 +124,13 @@ void screen_measurement_on_enter() {
 }
 
 
-void screen_measurement_on_exit() {
+void screen_measurement_on_exit(void) {
     ESP_LOGI(TAG, "exit measurement screen");
 }
 
 
 
-void screen_wifi_provision_on_enter() {
+void screen_wifi_provision_on_enter(void) {
     ESP_LOGI(TAG, "enter wifi provisioning screen");
     if (xWifiProvisionTask == NULL) {
         xTaskCreate(&environment_monitor_task_wifi_provision, "Wi-Fi Provision", 2048, NULL, 5, &xWifiProvisionTask);
@@ -138,7 +138,7 @@ void screen_wifi_provision_on_enter() {
 }
 
 
-void screen_wifi_provision_on_exit() {
+void screen_wifi_provision_on_exit(void) {
     ESP_LOGI(TAG, "exiting wifi provision screen...");
     
     wifi_stop_provision();

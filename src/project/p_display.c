@@ -42,7 +42,7 @@ void display_measurements(const measurement_t *scd41_m) {
 }
 
 
-void display_measurements_intro() {
+void display_measurements_intro(void) {
     if (!screen_semaphore_check(MEASUREMENT_SCR)) return;
     ssd1306_clear_display(oled_dev_hdl, false);
     ssd1306_display_text(oled_dev_hdl, 0, "CO2 0", false);
