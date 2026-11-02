@@ -11,8 +11,8 @@
 #include "p_screen.h"
 #include "p_wifi.h"
 
-static void setup() {
-
+static void setup() 
+{
     esp_err_t err;
     
     err = i2c_init();
@@ -33,16 +33,11 @@ static void setup() {
 }
 
 
-
-
 void app_main(void)
 {
     // Give USB Serial/JTAG time to connect
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     setup();
-
-    //xTaskCreate(&environment_monitor_task_wifi_provision, "Environment Monitor", 2048, NULL, 5, NULL);
-
 }
 

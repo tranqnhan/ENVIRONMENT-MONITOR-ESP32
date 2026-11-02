@@ -26,6 +26,7 @@ static bool _is_wifi_connected = false;
 static void _wifi_register_events(void);
 static void _generate_random_str(char *out, size_t out_len);
 static void _init_http_and_ntp(void);
+static esp_err_t _server_url_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data);
 
 static uint16_t num_on_wifi_start_cbs = 0;
 static void (*on_wifi_start_cbs[MAX_WIFI_START_CB])(void);
@@ -110,6 +111,12 @@ credential_ble_t wifi_start_provision(void)
         .verifier_len = verifier_len
     };
     
+    // Server URL registration
+    ESP_ERROR_CHECK(network_prov_mgr_endpoint_create("server-url"));
+    ESP_ERROR_CHECK(network_prov_mgr_endpoint_register("server-url", _server_url_register_handler, NULL));
+
+
+
     // Start provisioning
     ESP_ERROR_CHECK(
         network_prov_mgr_start_provisioning(
@@ -264,3 +271,28 @@ static void _init_http_and_ntp(void) {
     time_sntp_init();
 }
 
+
+static esp_err_t _server_url_register_handler(
+    uint32_t session_id,
+    const uint8_t *inbuf,
+    ssize_t inlen,
+    uint8_t **outbuf,
+    ssize_t *outlen,
+    void *priv_data
+) {
+    if (inbuf) {
+        ESP_LOGI(TAG, "Received server url: %.*s", inlen, (char *)inbuf);
+        nvs_save_string(NVS_SERVER_URL_KEY, (const char *) inbuf);
+    }
+
+    const char *response = "{\"success\":true}";
+
+    *outbuf = (uint8_t *)strdup(response);
+    if (*outbuf == NULL) {
+        ESP_LOGE(TAG, "System out of memory");
+        return ESP_ERR_NO_MEM;
+    }
+    *outlen = strlen(response) + 1; /* +1 for NULL terminating byte */
+
+    return ESP_OK;
+}
