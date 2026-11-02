@@ -14,20 +14,16 @@
 #include "network_provisioning/scheme_ble.h"
 #include "esp_random.h"
 
-#include "p_time.h"
 #include "p_wifi.h"
 #include "p_nvs.h"
-
-
-#define SALT_LEN 16
 
 static const char *USERNAME_HEADER = "EMS_";
 static const char *TAG = "WIFI";
 static bool _is_wifi_connected = false;
 
-static void wifi_register_events();
+static void wifi_register_events(void);
 
-void wifi_init() 
+void wifi_init(void) 
 {
     _is_wifi_connected = false;
 
@@ -60,19 +56,19 @@ static void generate_random_str(char *out, size_t out_len)
     out[out_len - 1] = '\0';
 }
 
-bool wifi_is_provision() {
+bool wifi_is_provision(void) {
     bool is_wifi_provisioned = false;
     ESP_ERROR_CHECK(network_prov_mgr_is_wifi_provisioned(&is_wifi_provisioned));
     return is_wifi_provisioned;
 }
 
 
-bool wifi_is_connected() {
+bool wifi_is_connected(void) {
     return _is_wifi_connected;
 }
 
 
-credential_ble_t wifi_start_provision() 
+credential_ble_t wifi_start_provision(void) 
 {
     // Network provisioning configurations
     network_prov_mgr_config_t provision_config = {
@@ -137,12 +133,21 @@ credential_ble_t wifi_start_provision()
 }
 
 
-void wifi_stop_provision() {
+esp_err_t wifi_erase_credentials(void)
+{
+    wifi_config_t wifi_config = {0};
+
+    return esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+}
+
+
+void wifi_stop_provision(void) 
+{
     network_prov_mgr_deinit();
 }
 
 
-void wifi_start_station() 
+void wifi_start_station(void) 
 {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -204,7 +209,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     }
 }
 
-static void wifi_register_events() 
+static void wifi_register_events(void) 
 {
     ESP_ERROR_CHECK(
         esp_event_handler_register(
