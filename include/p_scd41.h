@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include "esp_err.h"
 
 #define SCD41_ADDR    0x62
@@ -15,3 +16,4 @@ esp_err_t scd41_init();
 esp_err_t scd41_start_periodic_measurement();
 esp_err_t scd41_read_measurements(measurement_t* m);
 esp_err_t scd41_data_ready(bool *is_ready);
+void scd41_measurement_to_json(const measurement_t *m, char *json, size_t size);

@@ -39,6 +39,7 @@ static int provision_time_remaining = 0;
 
 void environment_monitor_task_wifi_provision(void *pvParameter) {
 
+    // TODO: add clearing wifi provisioining data
     // Wifi provision status
     if (wifi_is_provision()) {
         wifi_start_station();

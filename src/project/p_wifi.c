@@ -14,8 +14,8 @@
 #include "network_provisioning/scheme_ble.h"
 #include "esp_random.h"
 
+#include "p_time.h"
 #include "p_wifi.h"
-#include "p_data.h"
 #include "p_nvs.h"
 
 
@@ -23,11 +23,14 @@
 
 static const char *USERNAME_HEADER = "EMS_";
 static const char *TAG = "WIFI";
+static bool _is_wifi_connected = false;
 
 static void wifi_register_events();
 
 void wifi_init() 
 {
+    _is_wifi_connected = false;
+
     // Network stack
     ESP_ERROR_CHECK(esp_netif_init()); 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -64,9 +67,11 @@ bool wifi_is_provision() {
 }
 
 
-/*
-    Note: Start provisioning creates a new username
-*/
+bool wifi_is_connected() {
+    return _is_wifi_connected;
+}
+
+
 credential_ble_t wifi_start_provision() 
 {
     // Network provisioning configurations
@@ -86,13 +91,8 @@ credential_ble_t wifi_start_provision()
     generate_random_str(usernameTail, sizeof(usernameTail));
     snprintf(username, sizeof(username), "%s%s", USERNAME_HEADER, usernameTail);
 
-    nvs_save_string(NVS_USERNAME_KEY, username);
-    data_set_username(username, sizeof(username));
-
     char password[PASSWORD_LEN + 1];
     generate_random_str(password, sizeof(password));
-
-    ESP_LOGI(TAG, "username %s password %s", username, password);
 
     ESP_ERROR_CHECK(esp_srp_gen_salt_verifier(
         username,
@@ -128,6 +128,11 @@ credential_ble_t wifi_start_provision()
     snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
     snprintf(cred_ble.password, sizeof(cred_ble.password),"%s", password);
 
+    nvs_save_string(NVS_USERNAME_KEY, username);
+    nvs_save_string(NVS_PASSWORD_KEY, password);
+
+    // TODO: add database url
+
     return cred_ble;
 }
 
@@ -151,6 +156,9 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
             case WIFI_EVENT_STA_START:
                 esp_wifi_connect();
                 break;
+            case WIFI_EVENT_STA_CONNECTED:
+                _is_wifi_connected = true;
+                break;
             case WIFI_EVENT_STA_DISCONNECTED:
                 ESP_LOGI(TAG, "Wi-Fi disconnected");
                 break;
@@ -166,8 +174,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
                 ESP_LOGI(TAG, "Start provisioning");
                 break;
             case NETWORK_PROV_WIFI_CRED_RECV:
-                wifi_sta_config_t *wifi_config = (wifi_sta_config_t *)event_data;
-                ESP_LOGI(TAG, "Received wifi credentials %s", (char *) wifi_config->ssid);
+                // wifi_sta_config_t *wifi_config = (wifi_sta_config_t *)event_data;
+                ESP_LOGI(TAG, "Received wifi credentials");
                 break;
             case NETWORK_PROV_WIFI_CRED_SUCCESS:
                 ESP_LOGI(TAG, "Provisioning successful");

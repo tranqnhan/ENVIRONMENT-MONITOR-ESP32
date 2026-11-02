@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "p_data.h"
+#include "p_nvs.h"
 
 typedef struct {
     char username[USERNAME_LEN + 1];
@@ -14,5 +14,6 @@ void wifi_init();
 credential_ble_t wifi_start_provision();
 void wifi_stop_provision();
 bool wifi_is_provision();
+bool wifi_is_connected();
 
 void wifi_start_station();

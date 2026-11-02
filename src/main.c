@@ -3,7 +3,6 @@
 
 #include "esp_err.h"
 
-#include "p_data.h"
 #include "p_i2c.h"
 #include "p_nvs.h"
 #include "p_scd41.h"
@@ -29,7 +28,6 @@ static void setup() {
     log_command(err, "scd41 start periodic measurement");
 
     nvs_init();
-    data_init();
     wifi_init();
     screen_mgr_init();
 }
