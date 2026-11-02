@@ -8,7 +8,7 @@
 
 i2c_master_dev_handle_t scd41_handle;
 
-esp_err_t scd41_init() {
+esp_err_t scd41_init(void) {
     // ADD SCD41 TO BUS
     i2c_device_config_t dev_config = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -26,7 +26,7 @@ esp_err_t scd41_init() {
 }
 
 
-esp_err_t scd41_start_periodic_measurement() {
+esp_err_t scd41_start_periodic_measurement(void) {
     const uint8_t start_periodic_measurement[2] = {0x21, 0xb1};
 
     esp_err_t spm_err = i2c_master_transmit(

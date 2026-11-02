@@ -9,13 +9,9 @@
 #include "esp_netif_sntp.h"
 
 static const char *TAG = "NTP";
-static bool _is_time_ready = false;
-
 
 esp_err_t time_sntp_init(void)
 {
-    if (_is_time_ready) return ESP_OK;
-
     ESP_LOGI(TAG, "Initializing SNTP");
 
     esp_sntp_config_t config =
@@ -26,13 +22,13 @@ esp_err_t time_sntp_init(void)
     // Wait up to 10 seconds for synchronization
     if (esp_netif_sntp_sync_wait(pdMS_TO_TICKS(10000)) == ESP_OK) {
         ESP_LOGI(TAG, "Time synchronized!");
-        _is_time_ready = true;
         return ESP_OK;
     } else {
         ESP_LOGW(TAG, "NTP synchronization timed out");
         return ESP_ERR_INVALID_STATE;
     }
 }
+
 
 esp_err_t time_get_utc_time(char *utc_time_str, size_t size)
 {
@@ -53,8 +49,4 @@ esp_err_t time_get_utc_time(char *utc_time_str, size_t size)
     snprintf(utc_time_str, size, "%s", strftime_buf);
 
     return ESP_OK;
-}
-
-bool time_is_ready() {
-    return _is_time_ready;
 }

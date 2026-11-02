@@ -10,4 +10,3 @@ void http_client_send_sensor_data(
     const char *measured_at_utc, 
     const char *device_name
 );
-bool http_client_is_ready(void);

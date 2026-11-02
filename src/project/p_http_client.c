@@ -11,7 +11,6 @@
 #include "p_scd41.h"
 
 static esp_http_client_handle_t HTTP_API_CLIENT_HANDLE;
-static bool _http_client_is_ready = false;
 
 static void _http_client_message_to_json(
     const measurement_t *m, 
@@ -36,13 +35,6 @@ void http_client_init(const char *server_url)
     };
 
     HTTP_API_CLIENT_HANDLE = esp_http_client_init(&config);
-
-    _http_client_is_ready = true;
-}
-
-
-bool http_client_is_ready(void) {
-    return _http_client_is_ready;
 }
 
 

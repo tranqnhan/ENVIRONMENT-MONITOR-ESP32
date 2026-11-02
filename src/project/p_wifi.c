@@ -23,6 +23,12 @@ static bool _is_wifi_connected = false;
 
 static void wifi_register_events(void);
 
+#define MAX_WIFI_START_CB 2
+
+static uint16_t num_on_wifi_start_cbs = 0;
+static void (*on_wifi_start_cbs[MAX_WIFI_START_CB])(void);
+
+
 void wifi_init(void) 
 {
     _is_wifi_connected = false;
@@ -40,8 +46,14 @@ void wifi_init(void)
     wifi_register_events();
 }
 
+void wifi_start_register_callback(void (*on_wifi_start_cb)(void)) {
+    if (num_on_wifi_start_cbs < MAX_WIFI_START_CB) {
+        on_wifi_start_cbs[num_on_wifi_start_cbs] = on_wifi_start_cb;
+        num_on_wifi_start_cbs++;
+    }
+}
 
-static void generate_random_str(char *out, size_t out_len)
+static void _generate_random_str(char *out, size_t out_len)
 {
     static const char alphabet[] =
         "abcdefghijkmnopqrstuvwxyz"
@@ -84,11 +96,11 @@ credential_ble_t wifi_start_provision(void)
 
     char username[USERNAME_LEN + 1];
     char usernameTail[(USERNAME_LEN - strlen(USERNAME_HEADER)) + 1];
-    generate_random_str(usernameTail, sizeof(usernameTail));
+    _generate_random_str(usernameTail, sizeof(usernameTail));
     snprintf(username, sizeof(username), "%s%s", USERNAME_HEADER, usernameTail);
 
     char password[PASSWORD_LEN + 1];
-    generate_random_str(password, sizeof(password));
+    _generate_random_str(password, sizeof(password));
 
     ESP_ERROR_CHECK(esp_srp_gen_salt_verifier(
         username,
@@ -160,6 +172,11 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         switch (event_id) {
             case WIFI_EVENT_STA_START:
                 esp_wifi_connect();
+
+                for (uint16_t i = 0; i < num_on_wifi_start_cbs; ++i) {
+                    on_wifi_start_cbs[i]();
+                }
+
                 break;
             case WIFI_EVENT_STA_CONNECTED:
                 _is_wifi_connected = true;

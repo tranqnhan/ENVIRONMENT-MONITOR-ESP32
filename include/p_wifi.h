@@ -18,3 +18,6 @@ bool wifi_is_provision(void);
 bool wifi_is_connected(void);
 esp_err_t wifi_erase_credentials(void);
 void wifi_start_station(void);
+
+void wifi_start_register_callback(void (*on_wifi_start_cb)(void));
+
