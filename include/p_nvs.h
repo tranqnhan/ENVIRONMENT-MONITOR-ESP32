@@ -8,6 +8,7 @@
 
 #define USERNAME_LEN 8
 #define PASSWORD_LEN 8
+#define SERVER_URL_LEN 256
 
 esp_err_t nvs_init();
 void nvs_save_string(const char *key, const char *value);

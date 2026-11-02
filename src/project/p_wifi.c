@@ -15,15 +15,17 @@
 #include "esp_random.h"
 
 #include "p_wifi.h"
+#include "p_http_client.h"
 #include "p_nvs.h"
+#include "p_time.h"
 
 static const char *USERNAME_HEADER = "EMS_";
 static const char *TAG = "WIFI";
 static bool _is_wifi_connected = false;
 
-static void wifi_register_events(void);
-
-#define MAX_WIFI_START_CB 2
+static void _wifi_register_events(void);
+static void _generate_random_str(char *out, size_t out_len);
+static void _init_http_and_ntp(void);
 
 static uint16_t num_on_wifi_start_cbs = 0;
 static void (*on_wifi_start_cbs[MAX_WIFI_START_CB])(void);
@@ -42,8 +44,10 @@ void wifi_init(void)
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
 
+    wifi_start_register_callback(_init_http_and_ntp);
+    
     // Register events
-    wifi_register_events();
+    _wifi_register_events();
 }
 
 void wifi_start_register_callback(void (*on_wifi_start_cb)(void)) {
@@ -53,20 +57,6 @@ void wifi_start_register_callback(void (*on_wifi_start_cb)(void)) {
     }
 }
 
-static void _generate_random_str(char *out, size_t out_len)
-{
-    static const char alphabet[] =
-        "abcdefghijkmnopqrstuvwxyz"
-        "0123456789";
-
-
-    for (size_t i = 0; i < out_len - 1; i++) {
-        uint32_t r = esp_random();
-        out[i] = alphabet[r % (sizeof(alphabet) - 1)];
-    }
-
-    out[out_len - 1] = '\0';
-}
 
 bool wifi_is_provision(void) {
     bool is_wifi_provisioned = false;
@@ -166,16 +156,27 @@ void wifi_start_station(void)
 }
 
 
-static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) 
+static void _generate_random_str(char *out, size_t out_len)
+{
+    static const char alphabet[] =
+        "abcdefghijkmnopqrstuvwxyz"
+        "0123456789";
+
+
+    for (size_t i = 0; i < out_len - 1; i++) {
+        uint32_t r = esp_random();
+        out[i] = alphabet[r % (sizeof(alphabet) - 1)];
+    }
+
+    out[out_len - 1] = '\0';
+}
+
+static void _wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) 
 {
     if (event_base == WIFI_EVENT) {
         switch (event_id) {
             case WIFI_EVENT_STA_START:
                 esp_wifi_connect();
-
-                for (uint16_t i = 0; i < num_on_wifi_start_cbs; ++i) {
-                    on_wifi_start_cbs[i]();
-                }
 
                 break;
             case WIFI_EVENT_STA_CONNECTED:
@@ -226,13 +227,13 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     }
 }
 
-static void wifi_register_events(void) 
+static void _wifi_register_events(void) 
 {
     ESP_ERROR_CHECK(
         esp_event_handler_register(
             NETWORK_PROV_EVENT,
             ESP_EVENT_ANY_ID,
-            &wifi_event_handler,
+            &_wifi_event_handler,
             NULL
         )
     );
@@ -241,7 +242,7 @@ static void wifi_register_events(void)
         esp_event_handler_register(
             WIFI_EVENT,
             ESP_EVENT_ANY_ID,
-            &wifi_event_handler,
+            &_wifi_event_handler,
             NULL
         )
     );
@@ -250,11 +251,16 @@ static void wifi_register_events(void)
         esp_event_handler_register(
             IP_EVENT,
             IP_EVENT_STA_GOT_IP,
-            &wifi_event_handler,
+            &_wifi_event_handler,
             NULL
         )
     );
 }
 
-
+static void _init_http_and_ntp(void) {
+    char server_url[SERVER_URL_LEN];
+    nvs_read_string(NVS_SERVER_URL, server_url, SERVER_URL_LEN);
+    http_client_init(server_url);
+    time_sntp_init();
+}
 

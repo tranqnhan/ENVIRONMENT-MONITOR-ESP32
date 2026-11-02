@@ -5,6 +5,7 @@
 #include "p_nvs.h"
 
 #define SALT_LEN 16
+#define MAX_WIFI_START_CB 2
 
 typedef struct {
     char username[USERNAME_LEN + 1];
