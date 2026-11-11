@@ -17,7 +17,7 @@ static esp_http_client_handle_t HTTP_API_CLIENT_HANDLE;
 static bool _is_http_client_ready = false;
 static char _username[USERNAME_SIZE];
 static char _password[PASSWORD_SIZE];
-static char _json_message[HTTP_MESSAGE_SIZE];
+static char _json_message[HTTP_REQUEST_SIZE];
 static char _measured_at_utc[UTC_TIME_FORMAT_SIZE];
 
 static void _http_client_message_to_json(const measurement_t *m, const char *measured_at_utc, char *json);
@@ -32,7 +32,7 @@ void http_client_init()
     char api_url[api_url_size];
 
     nvs_read_string(NVS_USERNAME_KEY, _username, sizeof(_username));
-    nvs_read_string(NVS_USERNAME_KEY, _password, sizeof(_password));
+    nvs_read_string(NVS_PASSWORD_KEY, _password, sizeof(_password));
 
     snprintf(api_url, api_url_size, "%s%s", server_url, api_endpoint);
 
@@ -40,10 +40,7 @@ void http_client_init()
         .url = api_url,
         .method = HTTP_METHOD_POST,
         .crt_bundle_attach = esp_crt_bundle_attach,
-        .keep_alive_enable = true,
-        .auth_type = HTTP_AUTH_TYPE_BASIC,
-        .username = _username,
-        .password = _password,
+        .keep_alive_enable = true
     };
 
     HTTP_API_CLIENT_HANDLE = esp_http_client_init(&config);
@@ -63,7 +60,7 @@ void http_client_send_sensor_data(const measurement_t *m) {
     esp_http_client_set_post_field(
         HTTP_API_CLIENT_HANDLE,
         _json_message,
-        HTTP_MESSAGE_SIZE - 1
+        HTTP_REQUEST_SIZE - 1
     );
 
     esp_err_t err = esp_http_client_perform(HTTP_API_CLIENT_HANDLE);
@@ -82,10 +79,12 @@ static void _http_client_message_to_json(const measurement_t *m, const char *mea
         "temperature:%5.2f,"
         "humidity:%5.2f,"
         "co2_level:%4d,"
-        "measured_at:%s"
+        "measured_at:%s,"
+        "monitorDeviceUsername:%s,"
+        "monitorDevicePassword:%s"
     "}";
 
-    snprintf(json, HTTP_MESSAGE_SIZE, format, 
+    snprintf(json, HTTP_REQUEST_SIZE, format, 
         m->temperature, 
         m->humidity, 
         m->co2,

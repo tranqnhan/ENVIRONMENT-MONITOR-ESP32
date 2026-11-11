@@ -2,7 +2,7 @@
 
 #include "p_scd41.h"
 
-#define HTTP_MESSAGE_SIZE 256
+#define HTTP_REQUEST_SIZE 256
 
 void http_client_init();
 void http_client_send_sensor_data(const measurement_t *m);

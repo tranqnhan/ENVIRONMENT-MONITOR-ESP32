@@ -42,7 +42,6 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
     if (wifi_is_provision()) {
         wifi_start_station();
         screen_change_to(MEASUREMENT_SCR);
-        vTaskDelete(NULL);
         return;
     }
 
@@ -64,7 +63,6 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
 
     vTaskDelay(pdMS_TO_TICKS(3000));
 
+    // screen_change_to automatically deletes the task
     screen_change_to(MEASUREMENT_SCR);
-
-    vTaskDelete(NULL);
 }

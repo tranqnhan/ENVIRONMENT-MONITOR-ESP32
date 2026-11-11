@@ -3,6 +3,7 @@
 
 #include "esp_err.h"
 #include "esp_event.h"
+#include "esp_log_level.h"
 #include "esp_netif.h"
 #include "esp_netif_types.h"
 #include "esp_wifi.h"
@@ -113,9 +114,6 @@ credential_ble_t wifi_start_provision(void)
     
     // Server URL registration
     ESP_ERROR_CHECK(network_prov_mgr_endpoint_create("server-url"));
-    ESP_ERROR_CHECK(network_prov_mgr_endpoint_register("server-url", _server_url_register_handler, NULL));
-
-
 
     // Start provisioning
     ESP_ERROR_CHECK(
@@ -128,15 +126,15 @@ credential_ble_t wifi_start_provision(void)
     );
 
     ESP_LOGI(TAG, "BLE provisioning start");
-
+    
+    ESP_ERROR_CHECK(network_prov_mgr_endpoint_register("server-url", _server_url_register_handler, NULL));
+   
     credential_ble_t cred_ble;
     snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
     snprintf(cred_ble.password, sizeof(cred_ble.password),"%s", password);
 
     nvs_save_string(NVS_USERNAME_KEY, username);
     nvs_save_string(NVS_PASSWORD_KEY, password);
-
-    // TODO: add database url
 
     return cred_ble;
 }
@@ -180,8 +178,12 @@ static void _generate_random_str(char *out, size_t out_len)
     out[out_len - 1] = '\0';
 }
 
-static void _wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) 
-{
+static void _wifi_event_handler(
+    void *arg, 
+    esp_event_base_t event_base, 
+    int32_t event_id, 
+    void *event_data
+) {
     if (event_base == WIFI_EVENT) {
         switch (event_id) {
             case WIFI_EVENT_STA_START:
@@ -272,16 +274,10 @@ static void _init_http_and_ntp(void) {
 }
 
 
-static esp_err_t _server_url_register_handler(
-    uint32_t session_id,
-    const uint8_t *inbuf,
-    ssize_t inlen,
-    uint8_t **outbuf,
-    ssize_t *outlen,
-    void *priv_data
-) {
+static esp_err_t _server_url_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data) 
+{
     if (inbuf) {
-        ESP_LOGI(TAG, "Received server url: %.*s", inlen, (char *)inbuf);
+        ESP_LOGI(TAG, "Server url: %.*s", inlen, (char *)inbuf);
         nvs_save_string(NVS_SERVER_URL_KEY, (const char *) inbuf);
     }
 
