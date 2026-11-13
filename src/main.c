@@ -7,25 +7,16 @@
 #include "p_nvs.h"
 #include "p_scd41.h"
 #include "p_display.h"
-#include "p_log.h"
 #include "p_screen.h"
 #include "p_wifi.h"
 
 static void setup() 
 {
-    esp_err_t err;
     
-    err = i2c_init();
-    log_command(err, "i2c init");
-
-    err = display_init();
-    log_command(err, "display init");
-
-    err = scd41_init();
-    log_command(err, "scd41 init");
-
-    err = scd41_start_periodic_measurement();
-    log_command(err, "scd41 start periodic measurement");
+    ESP_ERROR_CHECK(i2c_init());
+    ESP_ERROR_CHECK(display_init());
+    ESP_ERROR_CHECK(scd41_init());
+    scd41_start_periodic_measurement();
 
     nvs_init();
     wifi_init();
