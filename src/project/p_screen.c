@@ -118,7 +118,7 @@ enum Screen screen_get_current(void) {
 void screen_measurement_on_enter(void) {
     ESP_LOGI(TAG, "enter measurement screen");
     if (xMeasurementTask == NULL) {
-        xTaskCreate(&environment_monitor_task_measure, "Measurement", 1500, NULL, 5, &xMeasurementTask);
+        xTaskCreate(&environment_monitor_task_measure, "Measurement", 2048, NULL, 5, &xMeasurementTask);
     }
     display_measurements_intro();
 }

@@ -19,10 +19,8 @@ esp_err_t time_sntp_init(void)
 
     ESP_LOGI(TAG, "Initializing SNTP");
 
-    esp_sntp_config_t config =
-        ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
-
-    ESP_ERROR_CHECK(esp_netif_sntp_init(&config));
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+    esp_netif_sntp_init(&config);
 
     // Wait up to 10 seconds for synchronization
     if (esp_netif_sntp_sync_wait(pdMS_TO_TICKS(10000)) == ESP_OK) {

@@ -7,6 +7,7 @@ idf_component_register(SRCS ${app_sources}
     REQUIRES
         network_provisioning
         esp_ssd1306
+    EMBED_TXTFILES "local_server.crt"
 )
 
 function(enable_cxx_compiler_flag_if_supported flag)

@@ -7,11 +7,16 @@
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
 #include "esp_err.h"
+#include "esp_log.h"
 
 #include "p_nvs.h"
 #include "p_scd41.h"
 #include "p_time.h"
 #include "p_wifi.h"
+
+extern const uint8_t local_server_crt_start[] asm("_binary_local_server_crt_start");
+
+static char *TAG = "HTTP";
 
 static esp_http_client_handle_t HTTP_API_CLIENT_HANDLE;
 static bool _is_http_client_ready = false;
@@ -20,13 +25,14 @@ static char _password[PASSWORD_SIZE];
 static char _json_message[HTTP_REQUEST_SIZE];
 static char _measured_at_utc[UTC_TIME_FORMAT_SIZE];
 
-static void _http_client_message_to_json(const measurement_t *m, const char *measured_at_utc, char *json);
+static void _http_client_message_to_json(const measurement_t *m, char *json);
 
 void http_client_init()
 {
     char server_url[SERVER_URL_SIZE];
     nvs_read_string(NVS_SERVER_URL_KEY, server_url, sizeof(server_url));
-
+    ESP_LOGI(TAG, "server url: %s", server_url);
+    
     const char *api_endpoint = "/data/add";
     const size_t api_url_size = strlen(api_endpoint) + strlen(server_url) + 1;
     char api_url[api_url_size];
@@ -38,8 +44,8 @@ void http_client_init()
 
     esp_http_client_config_t config = {
         .url = api_url,
+        .cert_pem = (const char *)local_server_crt_start,
         .method = HTTP_METHOD_POST,
-        .crt_bundle_attach = esp_crt_bundle_attach,
         .keep_alive_enable = true
     };
 
@@ -51,11 +57,14 @@ void http_client_init()
 
 void http_client_send_sensor_data(const measurement_t *m) {
     if (!(_is_http_client_ready && time_is_ready() && wifi_is_connected())) {
+        ESP_LOGE(TAG, "Cannot send sensor data | Client ready? %d | Time ready? %d | Wi-Fi connected? %d\n", _is_http_client_ready, time_is_ready(), wifi_is_connected());
         return;
     } 
     
     time_get_utc_time(_measured_at_utc, sizeof(_measured_at_utc));
-    _http_client_message_to_json(m, _measured_at_utc, _json_message);
+    ESP_LOGI(TAG, "utc time: %s", _measured_at_utc);
+
+    _http_client_message_to_json(m, _json_message);
 
     esp_http_client_set_post_field(
         HTTP_API_CLIENT_HANDLE,
@@ -68,12 +77,11 @@ void http_client_send_sensor_data(const measurement_t *m) {
     if (err == ESP_OK) {
         int status = esp_http_client_get_status_code(HTTP_API_CLIENT_HANDLE);
 
-        printf("HTTP status: %d\n", status);
+        ESP_LOGI(TAG, "status: %d", status);
     }
 }
 
-
-static void _http_client_message_to_json(const measurement_t *m, const char *measured_at_utc, char *json) 
+static void _http_client_message_to_json(const measurement_t *m, char *json) 
 {
     const char *format = "{"
         "temperature:%5.2f,"
@@ -88,6 +96,10 @@ static void _http_client_message_to_json(const measurement_t *m, const char *mea
         m->temperature, 
         m->humidity, 
         m->co2,
-        measured_at_utc
+        _measured_at_utc,
+        _username,
+        _password
     );
+
+    ESP_LOGI(TAG, "sending json: %s\n", json);
 }

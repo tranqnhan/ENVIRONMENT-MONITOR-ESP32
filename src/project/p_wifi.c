@@ -50,6 +50,13 @@ void wifi_init(void)
 
     // Register events
     _wifi_register_events();
+
+    if (wifi_is_provision()) {
+        ESP_LOGI(TAG, "Wi-Fi provisioned");
+        wifi_start_station();
+    } else {
+        ESP_LOGI(TAG, "Wi-Fi not provisioned");
+    }
 }
 
 void wifi_start_register_callback(void (*on_wifi_start_cb)(void)) {
@@ -153,6 +160,12 @@ void wifi_stop_provision(void)
     network_prov_mgr_deinit();
 }
 
+void wifi_reset_provision(void)
+{
+    network_prov_mgr_reset_wifi_provisioning();
+    esp_wifi_stop();
+    _is_wifi_connected = false;
+}
 
 void wifi_start_station(void) 
 {
@@ -191,6 +204,7 @@ static void _wifi_event_handler(
                 break;
             case WIFI_EVENT_STA_CONNECTED:
                 _is_wifi_connected = true;
+                ESP_LOGI(TAG, "Wi-Fi connected");
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
                 ESP_LOGI(TAG, "Wi-Fi disconnected");
@@ -229,7 +243,8 @@ static void _wifi_event_handler(
         switch (event_id) {
             case IP_EVENT_STA_GOT_IP:
                 ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-                ESP_LOGI(TAG, "got ip: " IPSTR, IP2STR(&event->ip_info.ip));
+                ESP_LOGI(TAG, "got ip: " IPSTR, IP2STR(&event->ip_info.ip));                
+                _init_http_and_ntp();
                 break;
             default:
                 break;
@@ -277,18 +292,22 @@ static void _init_http_and_ntp(void) {
 static esp_err_t _server_url_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data) 
 {
     if (inbuf) {
-        ESP_LOGI(TAG, "Server url: %.*s", inlen, (char *)inbuf);
-        nvs_save_string(NVS_SERVER_URL_KEY, (const char *) inbuf);
+        ESP_LOGI(TAG, "Server url: %.*s\n", inlen, (char *)inbuf);
+        char serverURL[inlen + 1];
+        memcpy(serverURL, inbuf, inlen);    
+        serverURL[inlen] = '\0';
+        nvs_save_string(NVS_SERVER_URL_KEY, serverURL);
     }
 
-    const char *response = "{\"success\":true}";
+    const char *response = "OK";
 
     *outbuf = (uint8_t *)strdup(response);
     if (*outbuf == NULL) {
+        *outlen = 0;
         ESP_LOGE(TAG, "System out of memory");
         return ESP_ERR_NO_MEM;
     }
-    *outlen = strlen(response) + 1; /* +1 for NULL terminating byte */
+    *outlen = strlen(response);
 
     return ESP_OK;
 }

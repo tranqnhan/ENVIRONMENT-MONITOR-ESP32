@@ -1,12 +1,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/idf_additions.h"
 
+#include "network_provisioning/manager.h"
+
 #include "p_tasks.h"
 #include "p_screen.h"
 #include "p_wifi.h"
 #include "p_scd41.h"
 #include "p_display.h"
-
+#include "p_http_client.h"
 
 // READ ENVIRONMENT TASK
 
@@ -21,6 +23,8 @@ void environment_monitor_task_measure(void *pvParameter) {
         if (is_data_ready) {
             scd41_read_measurements(&scd41_m);
             display_measurements(&scd41_m);
+
+            http_client_send_sensor_data(&scd41_m);
         }
 
         vTaskDelay(pdMS_TO_TICKS(5000));
@@ -36,13 +40,8 @@ void environment_monitor_task_measure(void *pvParameter) {
 static int provision_time_remaining = 0;
 
 void environment_monitor_task_wifi_provision(void *pvParameter) {
-
-    // TODO: add clearing wifi provisioining data
-    // Wifi provision status
     if (wifi_is_provision()) {
-        wifi_start_station();
-        screen_change_to(MEASUREMENT_SCR);
-        return;
+        wifi_reset_provision();
     }
 
     credential_ble_t cred_ble = wifi_start_provision();
@@ -55,6 +54,10 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
         provision_time_remaining -= 1;
 
         display_wifi_provision_time(provision_time_remaining);
+
+        if (wifi_is_connected()) {
+            screen_change_to(MEASUREMENT_SCR);
+        }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
