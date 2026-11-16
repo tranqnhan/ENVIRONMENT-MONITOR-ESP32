@@ -33,7 +33,7 @@ void http_client_init()
     nvs_read_string(NVS_SERVER_URL_KEY, server_url, sizeof(server_url));
     ESP_LOGI(TAG, "server url: %s", server_url);
     
-    const char *api_endpoint = "/data/add";
+    const char *api_endpoint = "data/add";
     const size_t api_url_size = strlen(api_endpoint) + strlen(server_url) + 1;
     char api_url[api_url_size];
 
@@ -41,6 +41,8 @@ void http_client_init()
     nvs_read_string(NVS_PASSWORD_KEY, _password, sizeof(_password));
 
     snprintf(api_url, api_url_size, "%s%s", server_url, api_endpoint);
+    
+    ESP_LOGI(TAG, "url: %s", api_url);
 
     esp_http_client_config_t config = {
         .url = api_url,
@@ -50,6 +52,10 @@ void http_client_init()
     };
 
     HTTP_API_CLIENT_HANDLE = esp_http_client_init(&config);
+
+    ESP_ERROR_CHECK(
+        esp_http_client_set_header(HTTP_API_CLIENT_HANDLE, "Content-Type", "application/json")
+    );
 
     _is_http_client_ready = true;
 }
@@ -69,7 +75,7 @@ void http_client_send_sensor_data(const measurement_t *m) {
     esp_http_client_set_post_field(
         HTTP_API_CLIENT_HANDLE,
         _json_message,
-        HTTP_REQUEST_SIZE - 1
+        strlen(_json_message)
     );
 
     esp_err_t err = esp_http_client_perform(HTTP_API_CLIENT_HANDLE);
@@ -84,12 +90,12 @@ void http_client_send_sensor_data(const measurement_t *m) {
 static void _http_client_message_to_json(const measurement_t *m, char *json) 
 {
     const char *format = "{"
-        "temperature:%5.2f,"
-        "humidity:%5.2f,"
-        "co2_level:%4d,"
-        "measured_at:%s,"
-        "monitorDeviceUsername:%s,"
-        "monitorDevicePassword:%s"
+        "\"temperature\":%5.2f,"
+        "\"humidity\":%5.2f,"
+        "\"co2Level\":%4d,"
+        "\"measuredAt\":\"%s\","
+        "\"monitorDeviceUsername\":\"%s\","
+        "\"monitorDevicePassword\":\"%s\""
     "}";
 
     snprintf(json, HTTP_REQUEST_SIZE, format, 

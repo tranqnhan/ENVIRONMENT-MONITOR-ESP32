@@ -43,7 +43,7 @@ esp_err_t time_get_utc_time(char *utc_time_str, size_t size)
     gmtime_r(&now, &timeinfo);
 
     strftime(strftime_buf, sizeof(strftime_buf),
-             "%Y-%m-%dT%H:%M:%S", &timeinfo);
+             "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
 
     if (size < UTC_TIME_FORMAT_SIZE) {
         return ESP_ERR_INVALID_SIZE;
