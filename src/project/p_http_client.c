@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "esp_http_client.h"
-#include "esp_crt_bundle.h"
 #include "esp_err.h"
 #include "esp_log.h"
 
@@ -68,7 +67,6 @@ void http_client_send_sensor_data(const measurement_t *m) {
     } 
     
     time_get_utc_time(_measured_at_utc, sizeof(_measured_at_utc));
-    ESP_LOGI(TAG, "utc time: %s", _measured_at_utc);
 
     _http_client_message_to_json(m, _json_message);
 
@@ -106,6 +104,4 @@ static void _http_client_message_to_json(const measurement_t *m, char *json)
         _username,
         _password
     );
-
-    ESP_LOGI(TAG, "sending json: %s\n", json);
 }

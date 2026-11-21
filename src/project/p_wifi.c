@@ -3,7 +3,6 @@
 
 #include "esp_err.h"
 #include "esp_event.h"
-#include "esp_log_level.h"
 #include "esp_netif.h"
 #include "esp_netif_types.h"
 #include "esp_wifi.h"
@@ -20,18 +19,16 @@
 #include "p_nvs.h"
 #include "p_time.h"
 
-static const char *USERNAME_HEADER = "EMS_";
+static const char *USERNAME_HEADER = "EMS.";
 static const char *TAG = "WIFI";
 static bool _is_wifi_connected = false;
+static bool _is_provision_end = false;
 
 static void _wifi_register_events(void);
 static void _generate_random_str(char *out, size_t out_len);
 static void _init_http_and_ntp(void);
 static esp_err_t _server_url_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data);
-
-static uint16_t num_on_wifi_start_cbs = 0;
-static void (*on_wifi_start_cbs[MAX_WIFI_START_CB])(void);
-
+static esp_err_t _username_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data);
 
 void wifi_init(void) 
 {
@@ -46,8 +43,6 @@ void wifi_init(void)
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
 
-    wifi_start_register_callback(_init_http_and_ntp);
-
     // Register events
     _wifi_register_events();
 
@@ -58,14 +53,6 @@ void wifi_init(void)
         ESP_LOGI(TAG, "Wi-Fi not provisioned");
     }
 }
-
-void wifi_start_register_callback(void (*on_wifi_start_cb)(void)) {
-    if (num_on_wifi_start_cbs < MAX_WIFI_START_CB) {
-        on_wifi_start_cbs[num_on_wifi_start_cbs] = on_wifi_start_cb;
-        num_on_wifi_start_cbs++;
-    }
-}
-
 
 bool wifi_is_provision(void) {
     bool is_wifi_provisioned = false;
@@ -78,9 +65,14 @@ bool wifi_is_connected(void) {
     return _is_wifi_connected;
 }
 
+bool wifi_is_provision_end(void) {
+    return _is_provision_end;
+}
 
 credential_ble_t wifi_start_provision(void) 
 {
+    _is_provision_end = false;
+
     // Network provisioning configurations
     network_prov_mgr_config_t provision_config = {
         .scheme = network_prov_scheme_ble,
@@ -121,6 +113,7 @@ credential_ble_t wifi_start_provision(void)
     
     // Server URL registration
     ESP_ERROR_CHECK(network_prov_mgr_endpoint_create("server-url"));
+    ESP_ERROR_CHECK(network_prov_mgr_endpoint_create("username"));
 
     // Start provisioning
     ESP_ERROR_CHECK(
@@ -135,6 +128,7 @@ credential_ble_t wifi_start_provision(void)
     ESP_LOGI(TAG, "BLE provisioning start");
     
     ESP_ERROR_CHECK(network_prov_mgr_endpoint_register("server-url", _server_url_register_handler, NULL));
+    ESP_ERROR_CHECK(network_prov_mgr_endpoint_register("username", _username_register_handler, NULL));
    
     credential_ble_t cred_ble;
     snprintf(cred_ble.username, sizeof(cred_ble.username),"%s", username);
@@ -222,7 +216,6 @@ static void _wifi_event_handler(
                 ESP_LOGI(TAG, "Start provisioning");
                 break;
             case NETWORK_PROV_WIFI_CRED_RECV:
-                // wifi_sta_config_t *wifi_config = (wifi_sta_config_t *)event_data;
                 ESP_LOGI(TAG, "Received wifi credentials");
                 break;
             case NETWORK_PROV_WIFI_CRED_SUCCESS:
@@ -232,6 +225,9 @@ static void _wifi_event_handler(
             case NETWORK_PROV_WIFI_CRED_FAIL:
                 ESP_LOGE(TAG, "Provisioning failed");
                 network_prov_mgr_reset_wifi_sm_state_on_failure();
+                break;
+            case NETWORK_PROV_END:
+                _is_provision_end = true;
                 break;
             default:
                 break;
@@ -297,6 +293,30 @@ static esp_err_t _server_url_register_handler(uint32_t session_id, const uint8_t
         memcpy(serverURL, inbuf, inlen);    
         serverURL[inlen] = '\0';
         nvs_save_string(NVS_SERVER_URL_KEY, serverURL);
+    }
+
+    const char *response = "OK";
+
+    *outbuf = (uint8_t *)strdup(response);
+    if (*outbuf == NULL) {
+        *outlen = 0;
+        ESP_LOGE(TAG, "System out of memory");
+        return ESP_ERR_NO_MEM;
+    }
+    *outlen = strlen(response);
+
+    return ESP_OK;
+}
+
+
+static esp_err_t _username_register_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen, uint8_t **outbuf, ssize_t *outlen, void *priv_data) 
+{
+    if (inbuf) {
+        ESP_LOGI(TAG, "Username: %.*s\n", inlen, (char *)inbuf);
+        char username[inlen + 1];
+        memcpy(username, inbuf, inlen);    
+        username[inlen] = '\0';
+        nvs_save_string(NVS_USERNAME_KEY, username);
     }
 
     const char *response = "OK";

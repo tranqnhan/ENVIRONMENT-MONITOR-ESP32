@@ -55,7 +55,7 @@ void environment_monitor_task_wifi_provision(void *pvParameter) {
 
         display_wifi_provision_time(provision_time_remaining);
 
-        if (wifi_is_connected()) {
+        if (wifi_is_provision_end()) {
             screen_change_to(MEASUREMENT_SCR);
         }
 

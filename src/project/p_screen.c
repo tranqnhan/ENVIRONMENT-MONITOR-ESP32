@@ -1,6 +1,7 @@
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include "p_display.h"
+#include "p_ident.h"
 #include "p_wifi.h"
 #include "portmacro.h"
 #include "button_types.h"
@@ -68,7 +69,7 @@ void screen_change_to_task(void *pxScreen) {
 
         if (current_screen == screen || screen >= NUM_SCREEN) {
             xSemaphoreGive(xScreenMutex);
-            return;
+            vTaskDelete(NULL);
         }
 
         xSemaphoreGive(xScreenMutex);
@@ -120,6 +121,8 @@ void screen_measurement_on_enter(void) {
     if (xMeasurementTask == NULL) {
         xTaskCreate(&environment_monitor_task_measure, "Measurement", 4096, NULL, 5, &xMeasurementTask);
     }
+
+    ident_load_username();
     display_measurements_intro();
 }
 

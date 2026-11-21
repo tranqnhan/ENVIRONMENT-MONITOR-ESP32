@@ -1,8 +1,10 @@
 #include "freertos/idf_additions.h"
+#include "p_ident.h"
 #include "p_screen.h"
 #include "string.h"
 #include "esp_err.h"
 #include "ssd1306.h"
+#include "esp_log.h"
 
 #include "p_i2c.h"
 #include "p_display.h"
@@ -25,8 +27,6 @@ esp_err_t display_init(void) {
 void display_measurements(const measurement_t *scd41_m) {
     if (!screen_semaphore_check(MEASUREMENT_SCR)) return;
 
-    ssd1306_clear_display(oled_dev_hdl, false);
-
     char co2_s[11];
     char tmp_s[17];
     char hmd_s[17];
@@ -35,19 +35,30 @@ void display_measurements(const measurement_t *scd41_m) {
     sprintf(tmp_s, "TMP %.2f", scd41_m->temperature);
     sprintf(hmd_s, "HMD %.2f", scd41_m->humidity);
     
+    ssd1306_clear_display_page(oled_dev_hdl, 0, false);
+    ssd1306_clear_display_page(oled_dev_hdl, 1, false);
+    ssd1306_clear_display_page(oled_dev_hdl, 2, false);
+    
     ssd1306_display_text(oled_dev_hdl, 0, co2_s, false);
     ssd1306_display_text(oled_dev_hdl, 1, tmp_s, false);
     ssd1306_display_text(oled_dev_hdl, 2, hmd_s, false);
     
+    if (ident_username_exists()) {
+        ssd1306_display_text(oled_dev_hdl, 3, ident_get_username(), false);
+    }
 }
 
 
 void display_measurements_intro(void) {
     if (!screen_semaphore_check(MEASUREMENT_SCR)) return;
+
     ssd1306_clear_display(oled_dev_hdl, false);
     ssd1306_display_text(oled_dev_hdl, 0, "CO2 0", false);
     ssd1306_display_text(oled_dev_hdl, 1, "TMP 0", false);
     ssd1306_display_text(oled_dev_hdl, 2, "HMD 0", false);
+    if (ident_username_exists()) {
+        ssd1306_display_text(oled_dev_hdl, 3, ident_get_username(), false);
+    }
 }
 
 
@@ -77,7 +88,6 @@ void display_wifi_provision(const char *username, const char *password, const ui
     ssd1306_display_text(oled_dev_hdl, 1, password_disp, false);
     ssd1306_display_text(oled_dev_hdl, 2, timer_disp, false);
     ssd1306_display_text(oled_dev_hdl, 3, message, false);
-
 }
 
 
